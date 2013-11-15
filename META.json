@@ -1,5 +1,5 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "Procedural validator",
    "author" : [
       "ITO Nobuaki <daydream.trippers@gmail.com>"
    ],
@@ -53,5 +53,10 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "repository" : {
+         "url" : "ssh://git@bitbucket.org/dayflower/p5-validator-procedural.git"
+      }
+   },
    "version" : "0.01"
 }
