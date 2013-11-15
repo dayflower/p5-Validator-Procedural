@@ -19,6 +19,10 @@ sub register_checker {
     my $self = shift;
 }
 
+sub register_procedure {
+    my $self = shift;
+}
+
 sub create_validator {
     my $self = shift;
 }
@@ -36,6 +40,10 @@ sub register_filter {
 }
 
 sub register_checker {
+    my $self = shift;
+}
+
+sub register_procedure {
     my $self = shift;
 }
 
@@ -64,6 +72,9 @@ sub invalid {
 sub clear_errors {
 }
 
+sub set_errors {
+}
+
 sub add_error {
 }
 
@@ -90,7 +101,10 @@ sub errors {
 sub clear_errors {
 }
 
-sub push_error {
+sub set_errors {
+}
+
+sub add_error {
 }
 
 1;
@@ -112,47 +126,59 @@ Validator::Procedural - Procedural validator
     Validator::Procedural::Checker::Common->register_to($mech);
 
     $mech->register_filter(
-        trim => sub {
+        TRIM => sub {
             s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
         },
     );
 
     $mech->register_checker(
-        email => sub {
-            # Ofcourse, this pattern is not strict for email, but It's example.
+        EMAIL => sub {
+            # Of course this pattern is not strict for email, but It's example.
             unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
-                return 'email';     # error code for errors
+                return 'INVALID';   # error code for errors
             }
 
             return;                 # (undef) for OK
         },
     );
 
+    $mech->register_procedure('DATETIME', sub {
+        my ($state) = @_;
+
+        # apply filters
+        $state->apply_filters('TRIM');
+
+        # apply checkers
+        return unless $state->check('EXISTS');
+    });
+
     my $validator = $mech->create_validator();
 
-    $validator->process('foo', sub {
+    $validator->process('foo', 'DATETIME', $req->param('foo'));
+
+    $validator->process('bar', sub {
         my ($state) = @_;
 
         # set value
-        $state->value($req->param('foo'));
+        $state->value($req->param('bar'));
 
         # apply filters
-        $state->apply_filters('trim');
+        $state->apply_filters('TRIM');
 
-        # manually filtering
+        # filter value manually
         my $val = $state->value();
         $state->value($val . ' +0000');
 
         # apply checkers
-        return unless $state->check('not_null');
+        return unless $state->check('EXISTS');
 
-        # manually checking
+        # check value manually
         eval {
             use Time::Piece;
             Time::Piece->strptime($state->value, '%Y-%m-%d %z');
         };
         if ($@) {
-            $state->add_error('date_format');
+            $state->add_error('INVALID_DATE');
             return;
         }
     });
@@ -161,13 +187,22 @@ Validator::Procedural - Procedural validator
     $validator->has_error();    # => ! success()
 
     $validator->errors();
-    # => errors in Hash-ref; {
-    #     foo => [ 'not_null', 'date_format' ],
-    # }
+    # => errors in Array; (
+    #     foo => [ 'MISSING', 'INVALID_DATE' ],
+    # )
+
+    $validator->error_fields();
+    # => fields in Array; ( 'foo', 'bar' )
+
+    $validator->error_fields('MISSING');
+    # => fields in Array; ( 'foo', 'bar' )
+
+    $validator->error_fields(sub { grep { $_ eq 'MISSING' } @_ });
+    # => fields in Array; ( 'foo', 'bar' )
 
     $validator->error('foo');
     # => errors for field in Array;
-    #    ( 'not_null', 'date_format' )
+    #    ( 'MISSING', 'INVALID_DATE' )
 
     $validator->valid('foo');   # => TRUE of FALSE
     $validator->invalid('foo'); # => ! valid()
@@ -176,11 +211,15 @@ Validator::Procedural - Procedural validator
     $validator->clear_errors('foo');
 
     # append error
-    $validator->add_error('foo', 'not_null');
+    $validator->add_error('foo', 'MISSING');
 
     # use Validator::Procedural::ErrorMessage for error messages.
 
 =head1 DESCRIPTION
+
+Validator::Procedural is ...
+
+=head1 MOTIVATION FOR YET ANOTHER VALIDATION MODULE
 
 Validator::Procedural is ...
 
