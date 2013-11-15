@@ -5,6 +5,94 @@ use warnings;
 
 our $VERSION = "0.01";
 
+sub new {
+    my ($class) = @_;
+    my $self = bless {}, $class;
+    return $self;
+}
+
+sub register_filter {
+    my $self = shift;
+}
+
+sub register_checker {
+    my $self = shift;
+}
+
+sub create_validator {
+    my $self = shift;
+}
+
+package Validator::Procedural::Validator;
+
+sub new {
+    my ($class) = @_;
+    my $self = bless {}, $class;
+    return $self;
+}
+
+sub register_filter {
+    my $self = shift;
+}
+
+sub register_checker {
+    my $self = shift;
+}
+
+sub process {
+    my $self = shift;
+}
+
+sub success {
+}
+
+sub has_error {
+}
+
+sub errors {
+}
+
+sub error {
+}
+
+sub valid {
+}
+
+sub invalid {
+}
+
+sub clear_errors {
+}
+
+sub add_error {
+}
+
+package Validator::Procedural::State;
+
+sub new {
+    my ($class) = @_;
+    my $self = bless {}, $class;
+    return $self;
+}
+
+sub value {
+}
+
+sub apply_filters {
+}
+
+sub check {
+}
+
+sub errors {
+}
+
+sub clear_errors {
+}
+
+sub push_error {
+}
+
 1;
 __END__
 
@@ -64,7 +152,7 @@ Validator::Procedural - Procedural validator
             Time::Piece->strptime($state->value, '%Y-%m-%d %z');
         };
         if ($@) {
-            $state->push_error('date_format');
+            $state->add_error('date_format');
             return;
         }
     });
@@ -85,7 +173,7 @@ Validator::Procedural - Procedural validator
     $validator->invalid('foo'); # => ! valid()
 
     # clear error
-    $validator->clear_error('foo');
+    $validator->clear_errors('foo');
 
     # append error
     $validator->add_error('foo', 'not_null');
