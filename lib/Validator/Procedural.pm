@@ -6,105 +6,300 @@ use warnings;
 our $VERSION = "0.01";
 
 sub new {
-    my ($class) = @_;
-    my $self = bless {}, $class;
+    my ($class, %args) = @_;
+    my $self = bless {
+        filters    => {},
+        checkers   => {},
+        procedures => {},
+
+        %args,
+    }, $class;
     return $self;
 }
 
 sub register_filter {
-    my $self = shift;
+    my ($self, @args) = @_;
+    while (my ($name, $filter) = splice @args, 0, 2) {
+        $self->{filters}->{$name} = $filter;
+    }
+    return $self;
 }
 
 sub register_checker {
-    my $self = shift;
+    my ($self, @args) = @_;
+    while (my ($name, $checker) = splice @args, 0, 2) {
+        $self->{checker}->{$name} = $checker;
+    }
+    return $self;
 }
 
 sub register_procedure {
-    my $self = shift;
+    my ($self, @args) = @_;
+    while (my ($name, $procedure) = splice @args, 0, 2) {
+        $self->{procedure}->{$name} = $procedure;
+    }
+    return $self;
+}
+
+sub register_formatter {
+    my ($self, $formatter) = @_;
+    $self->{formatter} = $formatter;
+    return $self;
+}
+
+sub register_filter_class {
+    die;
+}
+
+sub register_checker_class {
+    die;
+}
+
+sub register_procedure_class {
+    die;
 }
 
 sub create_validator {
     my $self = shift;
+
+    return Validator::Procedural::Validator->new(
+        filters    => { %{$self->{filters}}    },
+        checkers   => { %{$self->{filters}}    },
+        procedures => { %{$self->{procedures}} },
+        formatter  => $self->{formatter},
+    );
 }
 
 package Validator::Procedural::Validator;
 
+use Carp;
+
 sub new {
-    my ($class) = @_;
-    my $self = bless {}, $class;
+    my ($class, %args) = @_;
+    my $self = bless {
+        filters    => {},
+        checkers   => {},
+        procedures => {},
+
+        value        => {},
+        value_fields => [],
+        error        => {},
+        error_fields => [],
+
+        %args,
+    }, $class;
     return $self;
+}
+
+sub formatter {
+    my $self = shift;
+    if (@_) {
+        $self->{formatter} = shift;
+    }
+
+    unless ($self->{formatter}) {
+        require Validator::Procedural::Formatter::Simple;
+        $self->{formatter} = Validator::Procedural::Formatter::Simple->new();
+    }
+
+    return $self->{formatter};
 }
 
 sub register_filter {
-    my $self = shift;
-}
-
-sub register_checker {
-    my $self = shift;
-}
-
-sub register_procedure {
-    my $self = shift;
-}
-
-sub process {
-    my $self = shift;
-}
-
-sub success {
-}
-
-sub has_error {
-}
-
-sub errors {
-}
-
-sub error {
-}
-
-sub valid {
-}
-
-sub invalid {
-}
-
-sub clear_errors {
-}
-
-sub set_errors {
-}
-
-sub add_error {
-}
-
-package Validator::Procedural::State;
-
-sub new {
-    my ($class) = @_;
-    my $self = bless {}, $class;
+    my ($self, @args) = @_;
+    while (my ($name, $filter) = splice @args, 0, 2) {
+        $self->{filters}->{$name} = $filter;
+    }
     return $self;
 }
 
+sub register_checker {
+    my ($self, @args) = @_;
+    while (my ($name, $checker) = splice @args, 0, 2) {
+        $self->{checker}->{$name} = $checker;
+    }
+    return $self;
+}
+
+sub register_procedure {
+    my ($self, @args) = @_;
+    while (my ($name, $procedure) = splice @args, 0, 2) {
+        $self->{procedure}->{$name} = $procedure;
+    }
+    return $self;
+}
+
+sub register_formatter {
+    my ($self, $formatter) = @_;
+    $self->formatter($formatter);
+    return $self;
+}
+
+sub register_filter_class {
+    die;
+}
+
+sub register_checker_class {
+    die;
+}
+
+sub register_procedure_class {
+    die;
+}
+
+sub process {
+    my ($self, $field, $procedure, @vals) = @_;
+
+    if (@vals) {
+        $self->value($field, @vals);
+    }
+
+    if (! ref $procedure) {
+        my $meth = $self->{procedures}->{$procedure};
+        unless ($meth) {
+            croak "Undefined procedure: '$procedure'";
+        }
+        $procedure = $meth;
+    }
+
+    &$procedure($self->field($field));
+
+    return $self;
+}
+
+sub field {
+    my ($self, $field_name) = @_;
+    return Validator::Procedural::Field->new($self, $field_name);
+}
+
 sub value {
+    my ($self, $field) = splice @_, 0, 2;
+
+    if (@_) {
+        if (@_ == 1 && ! defined $_[0]) {
+            delete $self->{value}->{$field};
+            @{$self->{value_fields}} = grep { $_ ne $field } @{$self->{error_fields}};
+        }
+        else {
+            if (! exists $self->{value}->{$field}) {
+                push @{$self->{value_fields}}, $field;
+            }
+
+            $self->{value}->{$field} = [ @_ ];
+        }
+    }
+
+    return unless exists $self->{value}->{$field};
+    my $vals = $self->{value}->{$field};
+    return unless defined $vals;
+
+    return wantarray ? @$vals : $vals->[0];
 }
 
-sub apply_filters {
+sub values {
+    my ($self) = @_;
+
+    my @values = map { $_ => $self->{value}->{$_} } @{$self->{value_fields}};
+    return wantarray ? @values : +{ @values };
 }
 
-sub check {
+sub success {
+    my ($self) = @_;
+    return ! $self->has_error();
+}
+
+sub has_error {
+    my ($self) = @_;
+    my @has_error = grep { @{$self->{error}->{$_}} > 0 }
+                         @{$self->{error_fields}};
+    return @has_error > 0;
 }
 
 sub errors {
+    my ($self) = @_;
+
+    my @errors = map { $_ => $self->{error}->{$_} } @{$self->{error_fields}};
+    return wantarray ? @errors : +{ @errors };
+}
+
+sub error {
+    my ($self, $field) = splice @_, 0, 2;
+}
+
+sub valid {
+    my ($self, $field) = @_;
+
+    return ! $self->invalid($field);
+}
+
+sub invalid {
+    my ($self, $field) = @_;
+
+    return exists $self->{error}->{$field};
 }
 
 sub clear_errors {
+    my ($self, $field) = @_;
+
+    delete $self->{error}->{$field};
+    @{$self->{error_fields}} = grep { $_ ne $field } @{$self->{error_fields}};
+
+    return $self;
 }
 
 sub set_errors {
+    my ($self, $field) = splice @_, 0, 2;
+
+    if (@_) {
+        if (! exists $self->{error}->{$field}) {
+            push @{$self->{error_fields}}, $field;
+        }
+
+        $self->{error}->{$field} = [ @_ ];
+    }
+    else {
+        $self->clear_errors($field);
+    }
+
+    return $self;
 }
 
 sub add_error {
+    my ($self, $field) = splice @_, 0, 2;
+
+    if (! exists $self->{error}->{$field}) {
+        push @{$self->{error_fields}}, $field;
+
+        $self->{errors}->{$field} = [];
+    }
+
+    push @{$self->{error}->{$field}}, @_;
+
+    return $self;
+}
+
+package Validator::Procedural::Field;
+
+sub new {
+    my ($class, $validator, $label) = @_;
+    my $self = bless {
+        validator => $validator,
+        label     => $label,
+    }, $class;
+    return $self;
+}
+
+sub label { $_[0]->{label} }
+
+foreach my $key (qw( value apply_filters check check_all
+                     error clear_errors set_error add_error )) {
+    my $sub = sub {
+        my $self = shift;
+        return $self->{validator}->$key($self->{label}, @_);
+    };
+
+    no strict 'refs';
+    *{__PACKAGE__ . '..' . $key} = $sub;
 }
 
 1;
@@ -122,8 +317,13 @@ Validator::Procedural - Procedural validator
 
     my $mech = Validator::Procedural->new();
 
-    Validator::Procedural::Filter::Common->register_to($mech);
+    Validator::Procedural::Filter::Common->register_to($mech, 'TRIM', 'LTRIM');
     Validator::Procedural::Checker::Common->register_to($mech);
+
+    $mech->register_filter_class('Japanese', 'HAN2ZEN');
+    $mech->register_filter_class('+MY::Own::Filter');
+    $mech->register_checker_class('Date');
+    $mech->register_checker_class('+MY::Own::Checker', 'MYCHECKER');
 
     $mech->register_filter(
         TRIM => sub {
@@ -143,13 +343,13 @@ Validator::Procedural - Procedural validator
     );
 
     $mech->register_procedure('DATETIME', sub {
-        my ($state) = @_;
+        my ($field) = @_;
 
         # apply filters
-        $state->apply_filters('TRIM');
+        $field->apply_filters('TRIM');
 
         # apply checkers
-        return unless $state->check('EXISTS');
+        return unless $field->check('EXISTS');
     });
 
     my $validator = $mech->create_validator();
@@ -157,28 +357,29 @@ Validator::Procedural - Procedural validator
     $validator->process('foo', 'DATETIME', $req->param('foo'));
 
     $validator->process('bar', sub {
-        my ($state) = @_;
+        my ($field) = @_;
 
         # set value
-        $state->value($req->param('bar'));
+        $field->value($req->param('bar'));
 
         # apply filters
-        $state->apply_filters('TRIM');
+        $field->apply_filters('TRIM');
 
         # filter value manually
-        my $val = $state->value();
-        $state->value($val . ' +0000');
+        my $val = $field->value();
+        $field->value($val . ' +0000');
 
         # apply checkers
-        return unless $state->check('EXISTS');
+        return unless $field->check('EXISTS');
+        return unless $field->check_all('EXISTS', \&checker);
 
         # check value manually
         eval {
-            use Time::Piece;
-            Time::Piece->strptime($state->value, '%Y-%m-%d %z');
+            require Time::Piece;
+            Time::Piece->strptime($field->value, '%Y-%m-%d %z');
         };
         if ($@) {
-            $state->add_error('INVALID_DATE');
+            $field->add_error('INVALID_DATE');
             return;
         }
     });
@@ -212,6 +413,9 @@ Validator::Procedural - Procedural validator
 
     # append error
     $validator->add_error('foo', 'MISSING');
+
+    $validator->value('foo');
+    $validator->values();
 
     # use Validator::Procedural::ErrorMessage for error messages.
 

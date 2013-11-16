@@ -8,51 +8,69 @@ Validator::Procedural - Procedural validator
 
     my $mech = Validator::Procedural->new();
 
-    Validator::Procedural::Filter::Common->register_to($mech);
+    Validator::Procedural::Filter::Common->register_to($mech, 'TRIM', 'LTRIM');
     Validator::Procedural::Checker::Common->register_to($mech);
 
+    $mech->register_filter_class('Japanese', 'HAN2ZEN');
+    $mech->register_filter_class('+MY::Own::Filter');
+    $mech->register_checker_class('Date');
+    $mech->register_checker_class('+MY::Own::Checker', 'MYCHECKER');
+
     $mech->register_filter(
-        trim => sub {
+        TRIM => sub {
             s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
         },
     );
 
     $mech->register_checker(
-        email => sub {
-            # Ofcourse, this pattern is not strict for email, but It's example.
+        EMAIL => sub {
+            # Of course this pattern is not strict for email, but It's example.
             unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
-                return 'email';     # error code for errors
+                return 'INVALID';   # error code for errors
             }
 
             return;                 # (undef) for OK
         },
     );
 
-    my $validator = $mech->create_validator();
-
-    $validator->process('foo', sub {
-        my ($state) = @_;
-
-        # set value
-        $state->value($req->param('foo'));
+    $mech->register_procedure('DATETIME', sub {
+        my ($field) = @_;
 
         # apply filters
-        $state->apply_filters('trim');
-
-        # manually filtering
-        my $val = $state->value();
-        $state->value($val . ' +0000');
+        $field->apply_filters('TRIM');
 
         # apply checkers
-        return unless $state->check('not_null');
+        return unless $field->check('EXISTS');
+    });
 
-        # manually checking
+    my $validator = $mech->create_validator();
+
+    $validator->process('foo', 'DATETIME', $req->param('foo'));
+
+    $validator->process('bar', sub {
+        my ($field) = @_;
+
+        # set value
+        $field->value($req->param('bar'));
+
+        # apply filters
+        $field->apply_filters('TRIM');
+
+        # filter value manually
+        my $val = $field->value();
+        $field->value($val . ' +0000');
+
+        # apply checkers
+        return unless $field->check('EXISTS');
+        return unless $field->check_all('EXISTS', \&checker);
+
+        # check value manually
         eval {
-            use Time::Piece;
-            Time::Piece->strptime($state->value, '%Y-%m-%d %z');
+            require Time::Piece;
+            Time::Piece->strptime($field->value, '%Y-%m-%d %z');
         };
         if ($@) {
-            $state->push_error('date_format');
+            $field->add_error('INVALID_DATE');
             return;
         }
     });
@@ -61,26 +79,42 @@ Validator::Procedural - Procedural validator
     $validator->has_error();    # => ! success()
 
     $validator->errors();
-    # => errors in Hash-ref; {
-    #     foo => [ 'not_null', 'date_format' ],
-    # }
+    # => errors in Array; (
+    #     foo => [ 'MISSING', 'INVALID_DATE' ],
+    # )
+
+    $validator->error_fields();
+    # => fields in Array; ( 'foo', 'bar' )
+
+    $validator->error_fields('MISSING');
+    # => fields in Array; ( 'foo', 'bar' )
+
+    $validator->error_fields(sub { grep { $_ eq 'MISSING' } @_ });
+    # => fields in Array; ( 'foo', 'bar' )
 
     $validator->error('foo');
     # => errors for field in Array;
-    #    ( 'not_null', 'date_format' )
+    #    ( 'MISSING', 'INVALID_DATE' )
 
     $validator->valid('foo');   # => TRUE of FALSE
     $validator->invalid('foo'); # => ! valid()
 
     # clear error
-    $validator->clear_error('foo');
+    $validator->clear_errors('foo');
 
     # append error
-    $validator->add_error('foo', 'not_null');
+    $validator->add_error('foo', 'MISSING');
+
+    $validator->value('foo');
+    $validator->values();
 
     # use Validator::Procedural::ErrorMessage for error messages.
 
 # DESCRIPTION
+
+Validator::Procedural is ...
+
+# MOTIVATION FOR YET ANOTHER VALIDATION MODULE
 
 Validator::Procedural is ...
 
