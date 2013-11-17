@@ -189,22 +189,20 @@ sub values {
     return wantarray ? @values : +{ @values };
 }
 
-sub apply_filters {
-    my ($self, $field, @filters) = @_;
+sub apply_filter {
+    my ($self, $field, $filter, %options) = @_;
 
     my @vals = $self->value($field);
 
-    foreach my $filter (@filters) {
-        my $meth = $filter;
-        if (! ref $meth) {
-            $meth = $self->{filters}->{$filter};
-            unless ($meth) {
-                croak "Undefined filter: '$filter'";
-            }
+    my $meth = $filter;
+    if (! ref $meth) {
+        $meth = $self->{filters}->{$filter};
+        unless ($meth) {
+            croak "Undefined filter: '$filter'";
         }
-
-        @vals = map { &$meth($_) } @vals;
     }
+
+    @vals = map { &$meth($_, \%options) } @vals;
 
     $self->value($field, @vals);
 
@@ -212,54 +210,24 @@ sub apply_filters {
 }
 
 sub check {
-    my ($self, $field, @checkers) = @_;
+    my ($self, $field, $checker, %options) = @_;
 
     my @vals = $self->value($field);
 
-    foreach my $checker (@checkers) {
-        my $meth = $checker;
-        if (! ref $meth) {
-            $meth = $self->{checkers}->{$checker};
-            unless ($meth) {
-                croak "Undefined checker '$checker'";
-            }
-        }
-
-        my @error_codes = do {
-            local $_ = $vals[0];
-            grep { defined $_ && $_ ne "" } &$meth(@vals);
-        };
-        if (@error_codes) {
-            $self->add_error($field, @error_codes);
-            last;       # exit for first error
+    my $meth = $checker;
+    if (! ref $meth) {
+        $meth = $self->{checkers}->{$checker};
+        unless ($meth) {
+            croak "Undefined checker '$checker'";
         }
     }
 
-    return $self;
-}
-
-sub check_all {
-    my ($self, $field, @checkers) = @_;
-
-    my @vals = $self->value($field);
-
-    foreach my $checker (@checkers) {
-        my $meth = $checker;
-        if (! ref $meth) {
-            $meth = $self->{checkers}->{$checker};
-            unless ($meth) {
-                croak "Undefined checker '$checker'";
-            }
-        }
-
-        my @error_codes = do {
-            local $_ = $vals[0];
-            grep { defined $_ && $_ ne "" } &$meth(@vals);
-        };
-        if (@error_codes) {
-            $self->add_error($field, @error_codes);
-            # gather all errors, so doesn't break
-        }
+    my @error_codes = do {
+        local $_ = $vals[0];
+        grep { defined $_ && $_ ne "" } &$meth(@vals, \%options);
+    };
+    if (@error_codes) {
+        $self->add_error($field, @error_codes);
     }
 
     return $self;
@@ -405,7 +373,7 @@ sub new {
 
 sub label { $_[0]->{label} }
 
-foreach my $method (qw( value apply_filters check check_all
+foreach my $method (qw( value apply_filter check
                      error clear_errors set_error add_error )) {
     my $sub = sub {
         my $self = shift;
@@ -470,7 +438,7 @@ Validator::Procedural - Procedural validator
         my ($field) = @_;
 
         # apply filters
-        $field->apply_filters('TRIM');
+        $field->apply_filter('TRIM');
 
         # apply checkers
         return unless $field->check('EXISTS');
@@ -487,7 +455,7 @@ Validator::Procedural - Procedural validator
         $field->value($req->param('bar'));
 
         # apply filters
-        $field->apply_filters('TRIM');
+        $field->apply_filter('TRIM');
 
         # filter value manually
         my $val = $field->value();
@@ -495,7 +463,6 @@ Validator::Procedural - Procedural validator
 
         # apply checkers
         return unless $field->check('EXISTS');
-        return unless $field->check_all('EXISTS', \&checker);
 
         # check value manually
         eval {

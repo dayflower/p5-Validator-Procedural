@@ -67,7 +67,7 @@ subtest "add_error" => sub {
     is_deeply [ $vtor->error('foo') ], [ 'BAR', 'BAZ' ];
 };
 
-subtest "apply_filters" => sub {
+subtest "apply_filter" => sub {
     my $prot = Validator::Procedural::Prototype->new(
         filters => {
             TRIM    => sub { s{(?: \A \s+ | \s+ \z)}{}gxmso; $_ },
@@ -78,13 +78,15 @@ subtest "apply_filters" => sub {
 
     $vtor->process('foo', sub {
         my ($field) = @_;
-        $field->apply_filters('TRIM', sub { lc }, 'UCFIRST');
+        $field->apply_filter('TRIM');
+        $field->apply_filter(sub { lc });
+        $field->apply_filter('UCFIRST');
     }, ' HELLO WORLD ');
 
     is scalar $vtor->value('foo'), 'Hello world';
 };
 
-subtest "check and check_all" => sub {
+subtest "check" => sub {
     my $prot = Validator::Procedural::Prototype->new(
         checkers => {
             OK1 => sub { return },
@@ -97,17 +99,10 @@ subtest "check and check_all" => sub {
     );
     my $vtor = $prot->create_validator();
 
-    $vtor->process('single', sub {
-        my ($field) = @_;
-        $field->check(qw( OK1 NG1 OK2 NG2 OK3 NG3 ));
-    });
-
     $vtor->process('all', sub {
         my ($field) = @_;
-        $field->check_all(qw( OK1 NG1 OK2 NG2 OK3 NG3 ));
+        $field->check($_) for qw( OK1 NG1 OK2 NG2 OK3 NG3 );
     });
-
-    is_deeply [ $vtor->error('single') ], [qw( NG1 )];
 
     is_deeply [ $vtor->error('all') ], [qw( NG1 NG2 NG3 )];
 };
@@ -123,7 +118,7 @@ subtest "checker logic" => sub {
         procedures => {
             ALL => sub {
                 my ($field) = @_;
-                $field->check_all(qw( UC LC NUM SP )),
+                $field->check($_) for qw( UC LC NUM SP );
             },
         },
     );

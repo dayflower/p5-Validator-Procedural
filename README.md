@@ -45,7 +45,7 @@ Validator::Procedural - Procedural validator
         my ($field) = @_;
 
         # apply filters
-        $field->apply_filters('TRIM');
+        $field->apply_filter('TRIM');
 
         # apply checkers
         return unless $field->check('EXISTS');
@@ -62,7 +62,7 @@ Validator::Procedural - Procedural validator
         $field->value($req->param('bar'));
 
         # apply filters
-        $field->apply_filters('TRIM');
+        $field->apply_filter('TRIM');
 
         # filter value manually
         my $val = $field->value();
@@ -70,7 +70,6 @@ Validator::Procedural - Procedural validator
 
         # apply checkers
         return unless $field->check('EXISTS');
-        return unless $field->check_all('EXISTS', \&checker);
 
         # check value manually
         eval {
