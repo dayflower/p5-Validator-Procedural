@@ -62,6 +62,8 @@ foreach my $prop (qw( filter checker procedure )) {
 
 package Validator::Procedural::Prototype;
 
+our $VERSION = $Validator::Procedural::VERSION;
+
 our @ISA = qw( Validator::Procedural::_RegistryMixin );
 
 sub new {
