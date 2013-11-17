@@ -280,9 +280,21 @@ sub success {
 
 sub has_error {
     my ($self) = @_;
-    my @has_error = grep { @{$self->{error}->{$_}} > 0 }
-                         @{$self->{error_fields}};
-    return @has_error > 0;
+    return $self->{error_fields} > 0;
+}
+
+sub valid_fields {
+    my ($self) = @_;
+
+    my @fields = grep { ! exists $self->{error}->{$_} }
+                      @{$self->{value_fields}};
+    return @fields;
+}
+
+sub error_fields {
+    my ($self) = @_;
+    my @fields = @{$self->{error_fields}};
+    return @fields;
 }
 
 sub errors {
@@ -317,8 +329,15 @@ sub invalid {
 sub clear_errors {
     my ($self, $field) = @_;
 
-    delete $self->{error}->{$field};
-    @{$self->{error_fields}} = grep { $_ ne $field } @{$self->{error_fields}};
+    if (defined $field) {
+        delete $self->{error}->{$field};
+        @{$self->{error_fields}} = grep { $_ ne $field }
+                                        @{$self->{error_fields}};
+    }
+    else {
+        $self->{error} = {};
+        $self->{error_fields} = [];
+    }
 
     return $self;
 }
