@@ -1,1 +1,1 @@
-name = "Validator-Procedural"
+name = "Validator-Procedural"[release]do_not_upload_to_cpan=true
