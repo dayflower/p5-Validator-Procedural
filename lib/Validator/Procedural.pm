@@ -98,8 +98,8 @@ sub formatter {
     }
 
     unless ($self->{formatter}) {
-        require Validator::Procedural::Formatter::Simple;
-        $self->{formatter} = Validator::Procedural::Formatter::Simple->new();
+        require Validator::Procedural::Formatter::Minimal;
+        $self->{formatter} = Validator::Procedural::Formatter::Minimal->new();
     }
 
     return $self->{formatter};
