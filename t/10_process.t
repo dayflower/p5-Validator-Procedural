@@ -65,4 +65,21 @@ subtest "add_error" => sub {
     is_deeply [ $vtor->error('foo') ], [ 'BAR', 'BAZ' ];
 };
 
+subtest "apply_filters" => sub {
+    my $mech = Validator::Procedural->new(
+        filters => {
+            TRIM    => sub { s{(?: \A \s+ | \s+ \z)}{}gxmso; $_ },
+            UCFIRST => sub { ucfirst },
+        },
+    );
+    my $vtor = $mech->create_validator();
+
+    $vtor->process('foo', sub {
+        my ($field) = @_;
+        $field->apply_filters('TRIM', sub { lc }, 'UCFIRST');
+    }, ' HELLO WORLD ');
+
+    is scalar $vtor->value('foo'), 'Hello world';
+};
+
 done_testing;

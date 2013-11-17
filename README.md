@@ -19,6 +19,7 @@ Validator::Procedural - Procedural validator
     $mech->register_filter(
         TRIM => sub {
             s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
+            $_;
         },
     );
 

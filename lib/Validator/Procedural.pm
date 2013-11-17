@@ -188,16 +188,13 @@ sub values {
 }
 
 sub apply_filters {
-    my ($self, $field) = splice @_, 0, 2;
+    my ($self, $field, @filters) = @_;
 
     my @vals = $self->value($field);
 
-    foreach my $filter (@_) {
-        my $meth;
-        if (ref $filter) {
-            $meth = $filter;
-        }
-        else {
+    foreach my $filter (@filters) {
+        my $meth = $filter;
+        if (! ref $filter) {
             $meth = $self->{filters}->{$filter};
             unless ($meth) {
                 croak "Undefined filter: '$filter'";
@@ -207,7 +204,7 @@ sub apply_filters {
         @vals = map { &$meth($_) } @vals;
     }
 
-    $self->value(@vals);
+    $self->value($field, @vals);
 
     return $self;
 }
@@ -453,6 +450,7 @@ Validator::Procedural - Procedural validator
     $mech->register_filter(
         TRIM => sub {
             s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
+            $_;
         },
     );
 
