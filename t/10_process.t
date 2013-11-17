@@ -2,6 +2,7 @@ use strict;
 use Test::More;
 use Test::Difflet qw( is_deeply );
 use Validator::Procedural;
+use Validator::Procedural::Formatter::Minimal;
 
 subtest "label" => sub {
     my $prot = Validator::Procedural::Prototype->new();
@@ -139,6 +140,38 @@ subtest "checker logic" => sub {
     $vtor->clear_errors('val');
     $vtor->process('val', 'ALL', '123 456');
     is_deeply [ $vtor->error('val') ], [qw( NUM SP )];
+};
+
+subtest "error_messages" => sub {
+    my $fmtr = Validator::Procedural::Formatter::Minimal->new(
+        fields => {
+            abc => 'ABC',
+            def => 'DEF',
+            ghi => 'GHI',
+        },
+        errors => {
+            FOO => '[_1] foo',
+            BAR => 'bar [_1]',
+            BAZ => 'baz',
+        },
+    );
+
+    my $prot = Validator::Procedural::Prototype->new(
+        procedures => {
+            FOO => sub { $_[0]->add_error('FOO') },
+            BAR => sub { $_[0]->add_error('BAR') },
+            BAZ => sub { $_[0]->add_error('BAZ') },
+        },
+        formatter => $fmtr,
+    );
+    my $vtor = $prot->create_validator();
+
+    $vtor->process('abc', 'FOO');
+    $vtor->process('def', 'BAR');
+    $vtor->process('ghi', 'BAZ');
+    $vtor->process('HOGE', 'FOO');
+
+    is_deeply [ $vtor->error_messages() ], [ 'ABC foo', 'bar DEF', 'baz', 'Hoge foo' ];
 };
 
 done_testing;
