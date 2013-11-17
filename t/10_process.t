@@ -49,7 +49,7 @@ subtest "add_error" => sub {
         $field->add_error('BAZ');
     });
 
-    is_deeply $vtor->error('foo'), [ 'BAR', 'BAZ' ];
+    is_deeply [ $vtor->error('foo') ], [ 'BAR', 'BAZ' ];
 };
 
 done_testing;
