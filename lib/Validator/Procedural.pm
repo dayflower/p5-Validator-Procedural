@@ -203,6 +203,93 @@ sub values {
     return wantarray ? @values : +{ @values };
 }
 
+sub apply_filters {
+    my ($self, $field) = splice @_, 0, 2;
+
+    my @vals = $self->value($field);
+
+    foreach my $filter (@_) {
+        my $meth;
+        if (ref $filter) {
+            $meth = $filter;
+        }
+        else {
+            $meth = $self->{filters}->{$filter};
+            unless ($meth) {
+                croak "Undefined filter: '$filter'";
+            }
+        }
+
+        @vals = map { &$meth($_) } @vals;
+    }
+
+    $self->value(@vals);
+
+    return $self;
+}
+
+sub check {
+    my ($self, $field) = splice @_, 0, 2;
+
+    my @vals = $self->value($field);
+
+    foreach my $checker (@_) {
+        my $meth;
+        if (ref $checker) {
+            $meth = $checker;
+        }
+        else {
+            $meth = $self->{checkers}->{$checker};
+            unless ($meth) {
+                croak "Undefined checker '$checker'";
+            }
+        }
+
+        {
+            local $_ = $_[0];
+            my @error_codes = &$meth(@_);
+
+            if (@error_codes) {
+                $self->add_error($field, @error_codes);
+                last;       # exit for first error
+            }
+        }
+    }
+
+    return $self;
+}
+
+sub check_all {
+    my ($self, $field) = splice @_, 0, 2;
+
+    my @vals = $self->value($field);
+
+    foreach my $checker (@_) {
+        my $meth;
+        if (ref $checker) {
+            $meth = $checker;
+        }
+        else {
+            $meth = $self->{checkers}->{$checker};
+            unless ($meth) {
+                croak "Undefined checker '$checker'";
+            }
+        }
+
+        {
+            local $_ = $_[0];
+            my @error_codes = &$meth(@_);
+
+            if (@error_codes) {
+                $self->add_error($field, @error_codes);
+                # gather all errors, so doesn't break
+            }
+        }
+    }
+
+    return $self;
+}
+
 sub success {
     my ($self) = @_;
     return ! $self->has_error();
@@ -224,6 +311,12 @@ sub errors {
 
 sub error {
     my ($self, $field) = splice @_, 0, 2;
+
+    return unless exists $self->{error}->{$field};
+
+    my @errors = @{$self->{error}->{$_}};
+
+    return @errors;
 }
 
 sub valid {
@@ -276,6 +369,19 @@ sub add_error {
     push @{$self->{error}->{$field}}, @_;
 
     return $self;
+}
+
+sub error_messages {
+    my ($self) = @_;
+
+    my @messages = map { $self->error_message($_) } @{$self->{error_fields}};
+    return @messages;
+}
+
+sub error_message {
+    my ($self, $field) = @_;
+
+    return $self->formatter->format($field, $self->error($field));
 }
 
 package Validator::Procedural::Field;
