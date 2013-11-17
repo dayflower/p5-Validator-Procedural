@@ -1,5 +1,6 @@
 use strict;
 use Test::More;
+use Test::Difflet qw( is_deeply );
 use Validator::Procedural;
 
 subtest "label" => sub {
@@ -82,7 +83,7 @@ subtest "apply_filters" => sub {
     is scalar $vtor->value('foo'), 'Hello world';
 };
 
-subtest "check" => sub {
+subtest "check and check_all" => sub {
     my $mech = Validator::Procedural->new(
         checkers => {
             OK1 => sub { return },
@@ -108,6 +109,36 @@ subtest "check" => sub {
     is_deeply [ $vtor->error('single') ], [qw( NG1 )];
 
     is_deeply [ $vtor->error('all') ], [qw( NG1 NG2 NG3 )];
+};
+
+subtest "checker logic" => sub {
+    my $mech = Validator::Procedural->new(
+        checkers => {
+            UC  => sub { /[A-Z]/ && 'UC'  },
+            LC  => sub { /[a-z]/ && 'LC'  },
+            NUM => sub { /[0-9]/ && 'NUM' },
+            SP  => sub { /\s/    && 'SP'  },
+        },
+        procedures => {
+            ALL => sub {
+                my ($field) = @_;
+                $field->check_all(qw( UC LC NUM SP )),
+            },
+        },
+    );
+    my $vtor = $mech->create_validator();
+
+    $vtor->clear_errors('val');
+    $vtor->process('val', 'ALL', ' abc ');
+    is_deeply [ $vtor->error('val') ], [qw( LC SP )];
+
+    $vtor->clear_errors('val');
+    $vtor->process('val', 'ALL', 'Abc');
+    is_deeply [ $vtor->error('val') ], [qw( UC LC )];
+
+    $vtor->clear_errors('val');
+    $vtor->process('val', 'ALL', '123 456');
+    is_deeply [ $vtor->error('val') ], [qw( NUM SP )];
 };
 
 done_testing;

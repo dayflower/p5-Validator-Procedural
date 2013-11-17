@@ -224,8 +224,8 @@ sub check {
         }
 
         my @error_codes = do {
-            local $_ = $_[0];
-            &$meth(@vals);
+            local $_ = $vals[0];
+            grep { defined $_ && $_ ne "" } &$meth(@vals);
         };
         if (@error_codes) {
             $self->add_error($field, @error_codes);
@@ -251,8 +251,8 @@ sub check_all {
         }
 
         my @error_codes = do {
-            local $_ = $_[0];
-            &$meth(@vals);
+            local $_ = $vals[0];
+            grep { defined $_ && $_ ne "" } &$meth(@vals);
         };
         if (@error_codes) {
             $self->add_error($field, @error_codes);
@@ -429,7 +429,14 @@ Validator::Procedural - Procedural validator
 
     use Validator::Procedural;
 
-    my $mech = Validator::Procedural->new();
+    my $mech = Validator::Procedural->new(
+        filters => {
+            UCFIRST => sub { ucfirst },
+        },
+        checkers => {
+            NUMERIC => sub { /^\d+$/ || 'INVALID' },
+        },
+    );
 
     Validator::Procedural::Filter::Common->register_to($mech, 'TRIM', 'LTRIM');
     Validator::Procedural::Checker::Common->register_to($mech);
@@ -448,7 +455,7 @@ Validator::Procedural - Procedural validator
 
     $mech->register_checker(
         EMAIL => sub {
-            # Of course this pattern is not strict for email, but It's example.
+            # Of course this is not precise for email address, but just example.
             unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
                 return 'INVALID';   # error code for errors
             }
