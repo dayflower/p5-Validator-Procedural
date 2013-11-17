@@ -2,6 +2,19 @@ use strict;
 use Test::More;
 use Validator::Procedural;
 
+subtest "label" => sub {
+    my $mech = Validator::Procedural->new();
+    my $vtor = $mech->create_validator();
+
+    my $res;
+    $vtor->process('foo', sub {
+        my ($field) = @_;
+        $res = $field->label;
+    });
+
+    is $res, 'foo';
+};
+
 subtest "single value" => sub {
     my $mech = Validator::Procedural->new();
     my $vtor = $mech->create_validator();
