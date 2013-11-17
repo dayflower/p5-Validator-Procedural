@@ -82,4 +82,32 @@ subtest "apply_filters" => sub {
     is scalar $vtor->value('foo'), 'Hello world';
 };
 
+subtest "check" => sub {
+    my $mech = Validator::Procedural->new(
+        checkers => {
+            OK1 => sub { return },
+            OK2 => sub { return },
+            OK3 => sub { return },
+            NG1 => sub { return 'NG1' },
+            NG2 => sub { return 'NG2' },
+            NG3 => sub { return 'NG3' },
+        },
+    );
+    my $vtor = $mech->create_validator();
+
+    $vtor->process('single', sub {
+        my ($field) = @_;
+        $field->check(qw( OK1 NG1 OK2 NG2 OK3 NG3 ));
+    });
+
+    $vtor->process('all', sub {
+        my ($field) = @_;
+        $field->check_all(qw( OK1 NG1 OK2 NG2 OK3 NG3 ));
+    });
+
+    is_deeply [ $vtor->error('single') ], [qw( NG1 )];
+
+    is_deeply [ $vtor->error('all') ], [qw( NG1 NG2 NG3 )];
+};
+
 done_testing;

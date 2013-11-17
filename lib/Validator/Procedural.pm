@@ -87,7 +87,7 @@ sub create_validator {
 
     return Validator::Procedural::Validator->new(
         filters    => { %{$self->{filters}}    },
-        checkers   => { %{$self->{filters}}    },
+        checkers   => { %{$self->{checkers}}   },
         procedures => { %{$self->{procedures}} },
         formatter  => $self->{formatter},
     );
@@ -194,7 +194,7 @@ sub apply_filters {
 
     foreach my $filter (@filters) {
         my $meth = $filter;
-        if (! ref $filter) {
+        if (! ref $meth) {
             $meth = $self->{filters}->{$filter};
             unless ($meth) {
                 croak "Undefined filter: '$filter'";
@@ -210,30 +210,26 @@ sub apply_filters {
 }
 
 sub check {
-    my ($self, $field) = splice @_, 0, 2;
+    my ($self, $field, @checkers) = @_;
 
     my @vals = $self->value($field);
 
-    foreach my $checker (@_) {
-        my $meth;
-        if (ref $checker) {
-            $meth = $checker;
-        }
-        else {
+    foreach my $checker (@checkers) {
+        my $meth = $checker;
+        if (! ref $meth) {
             $meth = $self->{checkers}->{$checker};
             unless ($meth) {
                 croak "Undefined checker '$checker'";
             }
         }
 
-        {
+        my @error_codes = do {
             local $_ = $_[0];
-            my @error_codes = &$meth(@_);
-
-            if (@error_codes) {
-                $self->add_error($field, @error_codes);
-                last;       # exit for first error
-            }
+            &$meth(@vals);
+        };
+        if (@error_codes) {
+            $self->add_error($field, @error_codes);
+            last;       # exit for first error
         }
     }
 
@@ -241,30 +237,26 @@ sub check {
 }
 
 sub check_all {
-    my ($self, $field) = splice @_, 0, 2;
+    my ($self, $field, @checkers) = @_;
 
     my @vals = $self->value($field);
 
-    foreach my $checker (@_) {
-        my $meth;
-        if (ref $checker) {
-            $meth = $checker;
-        }
-        else {
+    foreach my $checker (@checkers) {
+        my $meth = $checker;
+        if (! ref $meth) {
             $meth = $self->{checkers}->{$checker};
             unless ($meth) {
                 croak "Undefined checker '$checker'";
             }
         }
 
-        {
+        my @error_codes = do {
             local $_ = $_[0];
-            my @error_codes = &$meth(@_);
-
-            if (@error_codes) {
-                $self->add_error($field, @error_codes);
-                # gather all errors, so doesn't break
-            }
+            &$meth(@vals);
+        };
+        if (@error_codes) {
+            $self->add_error($field, @error_codes);
+            # gather all errors, so doesn't break
         }
     }
 
