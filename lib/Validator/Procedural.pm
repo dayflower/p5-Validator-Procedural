@@ -38,11 +38,12 @@ foreach my $prop (qw( filter checker procedure )) {
     my $sub = sub {
         my ($self, $package) = splice @_, 0, 2;
 
-        if ($package =~ s/^\+//) {
-            # full spec package name
+        if ($package =~ s/^\:://) {
+            # plugin namespace
+            $package = "Validator::Procedural::$prefix::$package";
         }
         else {
-            $package = "Validator::Procedural::$prefix::$package";
+            # full spec package name
         }
 
         unless (eval "require $package" && ! $@) {
@@ -399,6 +400,7 @@ Validator::Procedural - Procedural validator
 
     use Validator::Procedural;
 
+    # create validator prototype with given filters / checkers.
     my $prot = Validator::Procedural::Prototype->new(
         filters => {
             UCFIRST => sub { ucfirst },
@@ -408,19 +410,23 @@ Validator::Procedural - Procedural validator
         },
     );
 
+    # filter plugins can be applied to validator (prototypes).
     Validator::Procedural::Filter::Common->register_to($prot, 'TRIM', 'LTRIM');
+    # also checker plugins can be
     Validator::Procedural::Checker::Common->register_to($prot);
 
-    $prot->register_filter_class('Japanese', 'HAN2ZEN');
-    $prot->register_filter_class('+MY::Own::Filter');
-    $prot->register_checker_class('Date');
-    $prot->register_checker_class('+MY::Own::Checker', 'MYCHECKER');
+    # filter class registration can be called from validator (prototypes).
+    # package begins with '::' is recognized under 'Validator::Procedural::Filter::' namespace.
+    $prot->register_filter_class('::Japanese', 'HAN2ZEN');
+    $prot->register_filter_class('MY::Own::Filter');
+    # also for checker class registration
+    # package begins with '::' is recognized under 'Validator::Procedural::Checker::' namespace.
+    $prot->register_checker_class('::Date');
+    $prot->register_checker_class('MY::Own::Checker', 'MYCHECKER');
 
+    # you can register filters (and checkers) after instantiation of prototype
     $prot->register_filter(
-        TRIM => sub {
-            s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
-            $_;
-        },
+        TRIM => sub { s{ (?: \A \s+ | \s+ \z ) }{}gxmso; $_ },
     );
 
     $prot->register_checker(
@@ -434,6 +440,7 @@ Validator::Procedural - Procedural validator
         },
     );
 
+    # can register common filtering and checking procedure (not required)
     $prot->register_procedure('DATETIME', sub {
         my ($field) = @_;
 
@@ -444,10 +451,13 @@ Validator::Procedural - Procedural validator
         return unless $field->check('EXISTS');
     });
 
+    # register error message formatter (default is Validator::Procedural::Formatter::Minimal)
+    $prot->register_formatter(Validator::Procedural::Formatter::Minimal->new());
+
+    # now create validator (with state) from prototype
     my $validator = $prot->create_validator();
 
-    $validator->process('foo', 'DATETIME', $req->param('foo'));
-
+    # process for field 'bar' by custom procedure
     $validator->process('bar', sub {
         my ($field) = @_;
 
@@ -475,23 +485,33 @@ Validator::Procedural - Procedural validator
         }
     });
 
+    # can apply registered procedure with given value
+    $validator->process('foo', 'DATETIME', $req->param('foo'));
+
+
+    # can retrieve validation result anytime
+
     $validator->success();      # => TRUE or FALSE
     $validator->has_error();    # => ! success()
 
+    # retrieve fields and errors mapping
     $validator->errors();
-    # => errors in Array; (
+    # => errors in Array or Hash-ref (for scalar context); (
     #     foo => [ 'MISSING', 'INVALID_DATE' ],
     # )
 
     $validator->invalid_fields();
     # => fields in Array; ( 'foo', 'bar' )
 
+    # can filter fields that has given error code
     $validator->invalid_fields('MISSING');
     # => fields in Array; ( 'foo', 'bar' )
 
+    # error code filtering rule can be supplied with subroutine
     $validator->invalid_fields(sub { grep { $_ eq 'MISSING' } @_ });
     # => fields in Array; ( 'foo', 'bar' )
 
+    # retrieve error codes (or empty for valid field)
     $validator->error('foo');
     # => errors for field in Array;
     #    ( 'MISSING', 'INVALID_DATE' )
@@ -502,28 +522,52 @@ Validator::Procedural - Procedural validator
     # clear error
     $validator->clear_errors('foo');
 
-    # append error
+    # append error (manually)
     $validator->add_error('foo', 'MISSING');
 
+    # retrieve filtered value for specified field
     $validator->value('foo');
+    # retrieve all values filtered
     $validator->values();
+    # => values in Array or Hash-ref (for scalar context); (
+    #     foo => [ 'val1', 'val2' ],
+    #     var => [ 'val1' ],            # always in Array-ref for single value
+    # )
 
-    # use Validator::Procedural::ErrorMessage for error messages.
+    # retrieve error messages for all fields
+    $validator->error_messages();
+    # retrieve error message(s) for given field
+    $validator->error_message('foo');
 
 =head1 DESCRIPTION
 
-Validator::Procedural is ...
+Validator::Procedural is yet another validation module.
 
 =head1 MOTIVATION FOR YET ANOTHER VALIDATION MODULE
 
-Validator::Procedural is ...
+There are so many validation modules on CPAN.  Why yet another one?
+
+Some of modules provide good-looking feature with simple configuration, but when I used those modules for compositing several fields and filtering fields (and for condition of some fields depending on other field), some were not able to handle such situation, some required custom handler.
+
+So I focused on following points for design this module.
+
+=over 4
+
+=item To provide compact but sufficient container for validation result
+
+=item To provide filtering mechanism and functionality to retrieve filtered parameters
+
+=item To depend on other modules as least as possible
+
+=back
+
+This module DOES NOT provide easy configuration.  But you have to implement validation procedure with Perl code, so on such a complex condition described above, you can make codes straightforwardly, easy to understand.
 
 =head1 LICENSE
 
 Copyright (C) ITO Nobuaki.
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 =head1 AUTHOR
 
