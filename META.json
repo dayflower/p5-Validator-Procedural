@@ -48,6 +48,7 @@
       },
       "test" : {
          "requires" : {
+            "Test::Difflet" : "0",
             "Test::More" : "0.98"
          }
       }
@@ -55,7 +56,8 @@
    "release_status" : "unstable",
    "resources" : {
       "repository" : {
-         "url" : "ssh://git@bitbucket.org/dayflower/p5-validator-procedural.git"
+         "type" : "git",
+         "url" : "git://bitbucket.org/dayflower/p5-validator-procedural.git"
       }
    },
    "version" : "0.01"
