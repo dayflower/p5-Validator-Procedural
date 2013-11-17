@@ -5,17 +5,9 @@ use warnings;
 
 our $VERSION = "0.01";
 
-sub new {
-    my ($class, %args) = @_;
-    my $self = bless {
-        filters    => {},
-        checkers   => {},
-        procedures => {},
+package Validator::Procedural::_RegistryMixin;
 
-        %args,
-    }, $class;
-    return $self;
-}
+use Carp;
 
 sub register_filter {
     my ($self, @args) = @_;
@@ -41,22 +33,53 @@ sub register_procedure {
     return $self;
 }
 
+foreach my $prop (qw( filter checker procedure )) {
+    my $prefix = ucfirst $prop;
+    my $sub = sub {
+        my ($self, $package) = splice @_, 0, 2;
+
+        if ($package =~ s/^\+//) {
+            # full spec package name
+        }
+        else {
+            $package = "Validator::Procedural::$prefix::$package";
+        }
+
+        unless (eval "require $package" && ! $@) {
+            croak "require $package failed: $@";
+        }
+
+        $package->register_to($self, @_);
+
+        return $self;
+    };
+
+    my $func = sprintf '%s::register_%s_class', __PACKAGE__, $prop;
+
+    no strict 'refs';
+    *{$func} = $sub;
+}
+
+package Validator::Procedural;
+
+our @ISA = qw( Validator::Procedural::_RegistryMixin );
+
+sub new {
+    my ($class, %args) = @_;
+    my $self = bless {
+        filters    => {},
+        checkers   => {},
+        procedures => {},
+
+        %args,
+    }, $class;
+    return $self;
+}
+
 sub register_formatter {
     my ($self, $formatter) = @_;
     $self->{formatter} = $formatter;
     return $self;
-}
-
-sub register_filter_class {
-    die;
-}
-
-sub register_checker_class {
-    die;
-}
-
-sub register_procedure_class {
-    die;
 }
 
 sub create_validator {
@@ -73,6 +96,8 @@ sub create_validator {
 package Validator::Procedural::Validator;
 
 use Carp;
+
+our @ISA = qw( Validator::Procedural::_RegistryMixin );
 
 sub new {
     my ($class, %args) = @_;
@@ -103,48 +128,6 @@ sub formatter {
     }
 
     return $self->{formatter};
-}
-
-sub register_filter {
-    my ($self, @args) = @_;
-    while (my ($name, $filter) = splice @args, 0, 2) {
-        $self->{filters}->{$name} = $filter;
-    }
-    return $self;
-}
-
-sub register_checker {
-    my ($self, @args) = @_;
-    while (my ($name, $checker) = splice @args, 0, 2) {
-        $self->{checker}->{$name} = $checker;
-    }
-    return $self;
-}
-
-sub register_procedure {
-    my ($self, @args) = @_;
-    while (my ($name, $procedure) = splice @args, 0, 2) {
-        $self->{procedure}->{$name} = $procedure;
-    }
-    return $self;
-}
-
-sub register_formatter {
-    my ($self, $formatter) = @_;
-    $self->formatter($formatter);
-    return $self;
-}
-
-sub register_filter_class {
-    die;
-}
-
-sub register_checker_class {
-    die;
-}
-
-sub register_procedure_class {
-    die;
 }
 
 sub process {
@@ -314,7 +297,7 @@ sub error {
 
     return unless exists $self->{error}->{$field};
 
-    my @errors = @{$self->{error}->{$_}};
+    my @errors = @{$self->{error}->{$field}};
 
     return @errors;
 }
@@ -363,7 +346,7 @@ sub add_error {
     if (! exists $self->{error}->{$field}) {
         push @{$self->{error_fields}}, $field;
 
-        $self->{errors}->{$field} = [];
+        $self->{error}->{$field} = [];
     }
 
     push @{$self->{error}->{$field}}, @_;
@@ -397,15 +380,17 @@ sub new {
 
 sub label { $_[0]->{label} }
 
-foreach my $key (qw( value apply_filters check check_all
+foreach my $method (qw( value apply_filters check check_all
                      error clear_errors set_error add_error )) {
     my $sub = sub {
         my $self = shift;
-        return $self->{validator}->$key($self->{label}, @_);
+        return $self->{validator}->$method($self->{label}, @_);
     };
 
+    my $func = sprintf '%s::%s', __PACKAGE__, $method;
+
     no strict 'refs';
-    *{__PACKAGE__ . '..' . $key} = $sub;
+    *{$func} = $sub;
 }
 
 1;
