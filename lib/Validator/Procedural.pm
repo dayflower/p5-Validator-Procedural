@@ -96,6 +96,7 @@ sub create_validator {
 package Validator::Procedural::Validator;
 
 use Carp;
+use List::Util qw( first );
 
 our @ISA = qw( Validator::Procedural::_RegistryMixin );
 
@@ -291,10 +292,24 @@ sub valid_fields {
     return @fields;
 }
 
-sub error_fields {
-    my ($self) = @_;
+sub invalid_fields {
+    my $self = shift;
+
     my @fields = @{$self->{error_fields}};
+
+    my @crits = map { ref $_ ? $_ : _gen_invalid_matcher($_) } @_;
+    if (@crits) {
+        my $e = $self->{error};
+        @fields = grep { my $f = $_; first { &$_(@{$e->{$f}}) } @crits }
+                       @fields;
+    }
+
     return @fields;
+}
+
+sub _gen_invalid_matcher {
+    my ($error_code) = @_;
+    return sub { first { $_ eq $error_code } @_ };
 }
 
 sub errors {
@@ -502,13 +517,13 @@ Validator::Procedural - Procedural validator
     #     foo => [ 'MISSING', 'INVALID_DATE' ],
     # )
 
-    $validator->error_fields();
+    $validator->invalid_fields();
     # => fields in Array; ( 'foo', 'bar' )
 
-    $validator->error_fields('MISSING');
+    $validator->invalid_fields('MISSING');
     # => fields in Array; ( 'foo', 'bar' )
 
-    $validator->error_fields(sub { grep { $_ eq 'MISSING' } @_ });
+    $validator->invalid_fields(sub { grep { $_ eq 'MISSING' } @_ });
     # => fields in Array; ( 'foo', 'bar' )
 
     $validator->error('foo');

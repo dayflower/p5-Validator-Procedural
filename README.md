@@ -83,13 +83,13 @@ Validator::Procedural - Procedural validator
     #     foo => [ 'MISSING', 'INVALID_DATE' ],
     # )
 
-    $validator->error_fields();
+    $validator->invalid_fields();
     # => fields in Array; ( 'foo', 'bar' )
 
-    $validator->error_fields('MISSING');
+    $validator->invalid_fields('MISSING');
     # => fields in Array; ( 'foo', 'bar' )
 
-    $validator->error_fields(sub { grep { $_ eq 'MISSING' } @_ });
+    $validator->invalid_fields(sub { grep { $_ eq 'MISSING' } @_ });
     # => fields in Array; ( 'foo', 'bar' )
 
     $validator->error('foo');
