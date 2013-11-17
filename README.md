@@ -6,7 +6,7 @@ Validator::Procedural - Procedural validator
 
     use Validator::Procedural;
 
-    my $mech = Validator::Procedural->new(
+    my $prot = Validator::Procedural::Prototype->new(
         filters => {
             UCFIRST => sub { ucfirst },
         },
@@ -15,22 +15,22 @@ Validator::Procedural - Procedural validator
         },
     );
 
-    Validator::Procedural::Filter::Common->register_to($mech, 'TRIM', 'LTRIM');
-    Validator::Procedural::Checker::Common->register_to($mech);
+    Validator::Procedural::Filter::Common->register_to($prot, 'TRIM', 'LTRIM');
+    Validator::Procedural::Checker::Common->register_to($prot);
 
-    $mech->register_filter_class('Japanese', 'HAN2ZEN');
-    $mech->register_filter_class('+MY::Own::Filter');
-    $mech->register_checker_class('Date');
-    $mech->register_checker_class('+MY::Own::Checker', 'MYCHECKER');
+    $prot->register_filter_class('Japanese', 'HAN2ZEN');
+    $prot->register_filter_class('+MY::Own::Filter');
+    $prot->register_checker_class('Date');
+    $prot->register_checker_class('+MY::Own::Checker', 'MYCHECKER');
 
-    $mech->register_filter(
+    $prot->register_filter(
         TRIM => sub {
             s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
             $_;
         },
     );
 
-    $mech->register_checker(
+    $prot->register_checker(
         EMAIL => sub {
             # Of course this is not precise for email address, but just example.
             unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
@@ -41,7 +41,7 @@ Validator::Procedural - Procedural validator
         },
     );
 
-    $mech->register_procedure('DATETIME', sub {
+    $prot->register_procedure('DATETIME', sub {
         my ($field) = @_;
 
         # apply filters
@@ -51,7 +51,7 @@ Validator::Procedural - Procedural validator
         return unless $field->check('EXISTS');
     });
 
-    my $validator = $mech->create_validator();
+    my $validator = $prot->create_validator();
 
     $validator->process('foo', 'DATETIME', $req->param('foo'));
 

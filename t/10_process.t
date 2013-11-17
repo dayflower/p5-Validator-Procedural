@@ -4,8 +4,8 @@ use Test::Difflet qw( is_deeply );
 use Validator::Procedural;
 
 subtest "label" => sub {
-    my $mech = Validator::Procedural->new();
-    my $vtor = $mech->create_validator();
+    my $prot = Validator::Procedural::Prototype->new();
+    my $vtor = $prot->create_validator();
 
     my $res;
     $vtor->process('foo', sub {
@@ -17,8 +17,8 @@ subtest "label" => sub {
 };
 
 subtest "single value" => sub {
-    my $mech = Validator::Procedural->new();
-    my $vtor = $mech->create_validator();
+    my $prot = Validator::Procedural::Prototype->new();
+    my $vtor = $prot->create_validator();
 
     $vtor->process('foo', sub {
         my ($field) = @_;
@@ -29,8 +29,8 @@ subtest "single value" => sub {
 };
 
 subtest "multiple values" => sub {
-    my $mech = Validator::Procedural->new();
-    my $vtor = $mech->create_validator();
+    my $prot = Validator::Procedural::Prototype->new();
+    my $vtor = $prot->create_validator();
 
     $vtor->process('foo', sub {
         my ($field) = @_;
@@ -42,8 +42,8 @@ subtest "multiple values" => sub {
 };
 
 subtest "value via process" => sub {
-    my $mech = Validator::Procedural->new();
-    my $vtor = $mech->create_validator();
+    my $prot = Validator::Procedural::Prototype->new();
+    my $vtor = $prot->create_validator();
 
     $vtor->process('foo', sub {
         my ($field) = @_;
@@ -54,8 +54,8 @@ subtest "value via process" => sub {
 };
 
 subtest "add_error" => sub {
-    my $mech = Validator::Procedural->new();
-    my $vtor = $mech->create_validator();
+    my $prot = Validator::Procedural::Prototype->new();
+    my $vtor = $prot->create_validator();
 
     $vtor->process('foo', sub {
         my ($field) = @_;
@@ -67,13 +67,13 @@ subtest "add_error" => sub {
 };
 
 subtest "apply_filters" => sub {
-    my $mech = Validator::Procedural->new(
+    my $prot = Validator::Procedural::Prototype->new(
         filters => {
             TRIM    => sub { s{(?: \A \s+ | \s+ \z)}{}gxmso; $_ },
             UCFIRST => sub { ucfirst },
         },
     );
-    my $vtor = $mech->create_validator();
+    my $vtor = $prot->create_validator();
 
     $vtor->process('foo', sub {
         my ($field) = @_;
@@ -84,7 +84,7 @@ subtest "apply_filters" => sub {
 };
 
 subtest "check and check_all" => sub {
-    my $mech = Validator::Procedural->new(
+    my $prot = Validator::Procedural::Prototype->new(
         checkers => {
             OK1 => sub { return },
             OK2 => sub { return },
@@ -94,7 +94,7 @@ subtest "check and check_all" => sub {
             NG3 => sub { return 'NG3' },
         },
     );
-    my $vtor = $mech->create_validator();
+    my $vtor = $prot->create_validator();
 
     $vtor->process('single', sub {
         my ($field) = @_;
@@ -112,7 +112,7 @@ subtest "check and check_all" => sub {
 };
 
 subtest "checker logic" => sub {
-    my $mech = Validator::Procedural->new(
+    my $prot = Validator::Procedural::Prototype->new(
         checkers => {
             UC  => sub { /[A-Z]/ && 'UC'  },
             LC  => sub { /[a-z]/ && 'LC'  },
@@ -126,7 +126,7 @@ subtest "checker logic" => sub {
             },
         },
     );
-    my $vtor = $mech->create_validator();
+    my $vtor = $prot->create_validator();
 
     $vtor->clear_errors('val');
     $vtor->process('val', 'ALL', ' abc ');
