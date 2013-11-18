@@ -241,7 +241,7 @@ sub success {
 
 sub has_error {
     my ($self) = @_;
-    return $self->{error_fields} > 0;
+    return @{$self->{error_fields}} > 0;
 }
 
 sub valid_fields {
