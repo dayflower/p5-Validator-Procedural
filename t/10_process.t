@@ -1,6 +1,5 @@
 use strict;
 use Test::More;
-use Test::Difflet qw( is_deeply );
 use Validator::Procedural;
 use Validator::Procedural::Formatter::Minimal;
 
