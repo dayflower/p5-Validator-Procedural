@@ -557,7 +557,7 @@ So I focused on following points for design this module.
 
 =item To provide filtering mechanism and functionality to retrieve filtered parameters
 
-=item To depend on other modules as least as possible
+=item To depend on other modules as least as possible (complex validators and filters depending on other modules heavyly will be supplied as dependent plugin distributions)
 
 =back
 

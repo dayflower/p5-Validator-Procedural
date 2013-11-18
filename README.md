@@ -160,7 +160,7 @@ So I focused on following points for design this module.
 
 - To provide compact but sufficient container for validation result
 - To provide filtering mechanism and functionality to retrieve filtered parameters
-- To depend on other modules as least as possible
+- To depend on other modules as least as possible (complex validators and filters depending on other modules heavyly will be supplied as dependent plugin distributions)
 
 This module DOES NOT provide easy configuration.  But you have to implement validation procedure with Perl code, so on such a complex condition described above, you can make codes straightforwardly, easy to understand.
 
