@@ -543,6 +543,8 @@ Validator::Procedural - Procedural validator
 
 Validator::Procedural is yet another validation module.
 
+THIS MODULE IS CURRENTLY ON WORKING DRAFT PHASE.  API MAY CHANGE.
+
 =head1 MOTIVATION FOR YET ANOTHER VALIDATION MODULE
 
 There are so many validation modules on CPAN.  Why yet another one?
