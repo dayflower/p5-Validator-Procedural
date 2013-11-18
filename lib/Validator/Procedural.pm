@@ -207,7 +207,7 @@ sub apply_filter {
 
     $self->value($field, @vals);
 
-    return $self;
+    return @vals;
 }
 
 sub check {
@@ -231,7 +231,7 @@ sub check {
         $self->add_error($field, @error_codes);
     }
 
-    return $self;
+    return @error_codes == 0;
 }
 
 sub success {
