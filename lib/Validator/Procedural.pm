@@ -8,6 +8,7 @@ our $VERSION = "0.01";
 package Validator::Procedural::_RegistryMixin;
 
 use Carp;
+use Module::Load ();
 
 sub register_filter {
     my ($self, @args) = @_;
@@ -46,9 +47,7 @@ foreach my $prop (qw( filter checker procedure )) {
             # full spec package name
         }
 
-        unless (eval "require $package" && ! $@) {
-            croak "require $package failed: $@";
-        }
+        Module::Load::load($package);
 
         $package->register_to($self, @_);
 
