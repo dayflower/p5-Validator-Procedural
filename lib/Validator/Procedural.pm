@@ -100,6 +100,7 @@ package Validator::Procedural;
 
 use Carp;
 use List::Util qw( first );
+use Hash::MultiValue;
 
 our @ISA = qw( Validator::Procedural::_RegistryMixin );
 
@@ -187,7 +188,7 @@ sub values {
     my ($self) = @_;
 
     my @values = map { $_ => $self->{value}->{$_} } @{$self->{value_fields}};
-    return wantarray ? @values : +{ @values };
+    return wantarray ? @values : Hash::MultiValue->from_mixed(@values);
 }
 
 sub apply_filter {
