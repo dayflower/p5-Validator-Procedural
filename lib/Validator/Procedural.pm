@@ -375,7 +375,7 @@ sub new {
 sub label { $_[0]->{label} }
 
 foreach my $method (qw( value apply_filter check
-                     error clear_errors set_error add_error )) {
+                     error clear_errors set_errors add_error )) {
     my $sub = sub {
         my $self = shift;
         return $self->{validator}->$method($self->{label}, @_);
