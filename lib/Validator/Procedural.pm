@@ -165,7 +165,7 @@ sub value {
     if (@_) {
         if (@_ == 1 && ! defined $_[0]) {
             delete $self->{value}->{$field};
-            @{$self->{value_fields}} = grep { $_ ne $field } @{$self->{error_fields}};
+            @{$self->{value_fields}} = grep { $_ ne $field } @{$self->{value_fields}};
         }
         else {
             if (! exists $self->{value}->{$field}) {
