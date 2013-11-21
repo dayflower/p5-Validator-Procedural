@@ -550,7 +550,7 @@ THIS MODULE IS CURRENTLY ON WORKING DRAFT PHASE.  API MAY CHANGE.
 
 There are so many validation modules on CPAN.  Why yet another one?
 
-Some of modules provide good-looking features with simple configuration, but when I used those modules for compositing several fields and filtering fields (and for condition of some fields depending on other field), some were not able to handle such situation, some required custom handler.
+Some of such modules provide good-looking features with simple configuration. But when I used those modules for compositing several fields and filtering fields (and for condition of some fields depending on other field), some were not able to handle such situation, some required custom handler.
 
 So I focused on following points for design this module.
 
@@ -560,11 +560,13 @@ So I focused on following points for design this module.
 
 =item To provide filtering mechanism and functionality to retrieve filtered parameters
 
-=item To depend on other modules as least as possible (complex validators and filters depending on other modules heavyly will be supplied as dependent plugin distributions)
+=item To depend on other modules as least as possible (complex validators and filters depending on other modules heavyly should be supplied as dependent plugin distributions)
+
+=item To make error message formatter independent of validator
 
 =back
 
-This module is NOT all-in-one validation product.  This module DOES NOT provide easy configuration.  But you have to implement validation procedure with Perl code, so on such a complex condition described above, you can make codes straightforwardly, easy to understand.
+This module is NOT all-in-one validation product.  This module DOES NOT provide easy configuration.  But you have to implement validation procedure with Perl code, so on such a complex condition described above, you can write codes straightforwardly, easy to understand.
 
 =head1 LICENSE
 
