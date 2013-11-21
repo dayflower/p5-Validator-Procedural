@@ -174,4 +174,4 @@ This library is free software; you can redistribute it and/or modify it under th
 
 # AUTHOR
 
-ITO Nobuaki <daydream.trippers@gmail.com>
+ITO Nobuaki <dayflower@cpan.org>

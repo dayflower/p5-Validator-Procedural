@@ -573,7 +573,7 @@ This library is free software; you can redistribute it and/or modify it under th
 
 =head1 AUTHOR
 
-ITO Nobuaki E<lt>daydream.trippers@gmail.comE<gt>
+ITO Nobuaki E<lt>dayflower@cpan.orgE<gt>
 
 =cut
 

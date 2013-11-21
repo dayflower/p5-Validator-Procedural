@@ -42,7 +42,7 @@ it under the same terms as Perl itself.
 
 =head1 AUTHOR
 
-ITO Nobuaki E<lt>daydream.trippers@gmail.comE<gt>
+ITO Nobuaki E<lt>dayflower@cpan.orgE<gt>
 
 =cut
 
