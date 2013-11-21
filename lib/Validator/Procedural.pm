@@ -495,31 +495,32 @@ Validator::Procedural - Procedural validator
     $validator->has_error();    # => ! success()
 
     # retrieve fields and errors mapping
-    $validator->errors();
-    # => errors in Array or Hash-ref (for scalar context); (
+    $validator->errors();       # return errors errors in Array or Hash-ref (for scalar context)
+    # => (
     #     foo => [ 'MISSING', 'INVALID_DATE' ],
     # )
 
     $validator->invalid_fields();
-    # => fields in Array; ( 'foo', 'bar' )
+    # => ( 'foo', 'bar' )
 
     # can filter fields that has given error code
     $validator->invalid_fields('MISSING');
-    # => fields in Array; ( 'foo', 'bar' )
+    # => ( 'foo', 'bar' )
 
     # error code filtering rule can be supplied with subroutine
     $validator->invalid_fields(sub { grep { $_ eq 'MISSING' } @_ });
-    # => fields in Array; ( 'foo', 'bar' )
+    # => ( 'foo', 'bar' )
+
+    $validator->valid('foo');       # => TRUE of FALSE
+    $validator->invalid('foo');     # => ! valid()
 
     # retrieve error codes (or empty for valid field)
-    $validator->error('foo');
-    # => errors for field in Array;
-    #    ( 'MISSING', 'INVALID_DATE' )
+    $validator->error('foo');       # return errors for specified field in Array
+    # => ( 'MISSING', 'INVALID_DATE' )
 
-    $validator->valid('foo');   # => TRUE of FALSE
-    $validator->invalid('foo'); # => ! valid()
-
-    # clear error
+    # clear all errors
+    $validator->clear_errors();
+    # clear errors for specified fields
     $validator->clear_errors('foo');
 
     # append error (manually)
@@ -528,8 +529,8 @@ Validator::Procedural - Procedural validator
     # retrieve filtered value for specified field
     $validator->value('foo');
     # retrieve all values filtered
-    $validator->values();
-    # => values in Array or Hash-ref (for scalar context); (
+    $validator->values();   # return values in Array or Hash::MultiValue (for scalar context)
+    # => (
     #     foo => [ 'val1', 'val2' ],
     #     var => [ 'val1' ],            # always in Array-ref for single value
     # )
