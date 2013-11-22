@@ -149,9 +149,7 @@ sub process {
         $procedure = $meth;
     }
 
-    &$procedure($self->field($field));
-
-    return $self;
+    return &$procedure($self->field($field));
 }
 
 sub field {
@@ -441,7 +439,7 @@ Validator::Procedural - Procedural validator
     );
 
     # can register common filtering and checking procedure (not required)
-    $prot->register_procedure('DATETIME', sub {
+    $prot->register_procedure('datetime', sub {
         my ($field) = @_;
 
         # apply filters
@@ -583,7 +581,7 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 Registers filter methods.
 
-Requisites for filter methods are described in L<"REQUISITE FOR FILTER METHODS">.
+Requisites for filter methods are described in L<"REQUISITES FOR FILTER METHODS">.
 
 =item register_checker
 
@@ -596,20 +594,20 @@ Requisites for filter methods are described in L<"REQUISITE FOR FILTER METHODS">
 
 Registers checker methods.
 
-Requisites for checker methods are described in L<"REQUISITE FOR CHECKER METHODS">.
+Requisites for checker methods are described in L<"REQUISITES FOR CHECKER METHODS">.
 
 =item register_procedure
 
-    $validator->register_procedure( FOO => sub { ... } );
+    $validator->register_procedure( foo => sub { ... } );
     $validator->register_procedure(
-        FOO => sub { ... },
-        BAR => sub { ... },
+        foo => sub { ... },
+        bar => sub { ... },
         ...
     );
 
 Registers procedure methods.
 
-Requisites for procedure methods are described in L<"REQUISITE FOR PROCEDURE METHODS">.
+Requisites for procedure methods are described in L<"REQUISITES FOR PROCEDURE METHODS">.
 
 =item register_filter_class
 
@@ -652,7 +650,7 @@ Register procedure methods from specified module.
 
 =back
 
-=head1 REQUISITE FOR FILTER METHODS
+=head1 REQUISITES FOR FILTER METHODS
 
     $validator->register_filter(
         TRIM => sub {
@@ -672,7 +670,7 @@ You can receive original value from method arguments, following options specifie
         },
     );
 
-=head1 REQUISITE FOR CHECKER METHODS
+=head1 REQUISITES FOR CHECKER METHODS
 
     $validator->register_checker(
         EMAIL => sub {
@@ -702,7 +700,41 @@ If you want to check multiple values supplied, you can capture from method argum
     );
 
 
-=head1 REQUISITE FOR PROCEDURE METHODS
+=head1 REQUISITES FOR PROCEDURE METHODS
+
+    $validator->register_procedure(
+        exists => sub {
+            my ($field) = @_;
+
+            # apply filters
+            $field->apply_filter('TRIM');
+
+            # apply checkers
+            return unless $field->check('EXISTS');
+        }
+    );
+
+Requisites for procedure methods are quite simple.
+Do what you want.
+
+L<Validator::Procedural::Field> parameter is supplied as argument.
+Then you may filter things, and you may check constraints.
+
+Returned value will not be used (but will reflect into result of C<process()> method).
+
+Especially procedure is specified as argument for C<process()>, you can conjunct multiple parameters into a field.
+
+    $validator->process('tel',
+        sub {
+            my ($field) = @_;
+
+            $field->value( sprintf '%s-%s-%s', $param->{tel1}, $param->{tel2}, $param->{tel3} );
+
+            $field->apply_filter('TOUPPER');
+
+            return unless $field->check('TEL');
+        }
+    );
 
 =head1 LICENSE
 
