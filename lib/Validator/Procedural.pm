@@ -663,7 +663,7 @@ j           $_      # should return filtered value
 
 Filter methods accept original value from C<$_> and should return filtered values.
 
-You can receive original value from method arguments, following options specified in C<apply_filter()>.
+You can receive original value from method arguments, following options specified in C<apply_filter()> method.
 
     $validator->register_filter(
         REPEAT => sub {
@@ -673,6 +673,34 @@ You can receive original value from method arguments, following options specifie
     );
 
 =head1 REQUISITE FOR CHECKER METHODS
+
+    $validator->register_checker(
+        EMAIL => sub {
+            unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
+                return 'INVALID';   # error code for errors
+            }
+
+            return;                 # (undef) for OK
+        },
+    );
+
+Filter methods accept single value from C<$_> and should return error codes (yes you can return multiple error codes), or return undef for success.
+
+If you want to check multiple values supplied, you can capture from method arguments, following options specified in C<check()> method.
+
+    $validator->register_checker(
+        CONTAINS => sub {
+            my $option = pop @_;
+            my (@vals) = @_;
+
+            unless (grep { $_ eq $option->{target} } @vals) {
+                return 'ABSENT';
+            }
+
+            return;
+        },
+    );
+
 
 =head1 REQUISITE FOR PROCEDURE METHODS
 
