@@ -556,7 +556,7 @@ So I focused on following points for design this module.
 
 =over 4
 
-=item To provide compact but sufficient container for validation result
+=item To provide compact but sufficient container for validation results
 
 =item To provide filtering mechanism and functionality to retrieve filtered parameters
 
@@ -567,6 +567,96 @@ So I focused on following points for design this module.
 =back
 
 This module is NOT all-in-one validation product.  This module DOES NOT provide easy configuration.  But you have to implement validation procedure with Perl code, so on such a complex condition described above, you can write codes straightforwardly, easy to understand.
+
+=head1 METHODS
+
+=over 4
+
+=item register_filter
+
+    $validator->register_filter( FOO => sub { ... } );
+    $validator->register_filter(
+        FOO => sub { ... },
+        BAR => sub { ... },
+        ...
+    );
+
+Registers filter methods.
+
+Requisites for filter methods are described in L<"REQUISITE FOR FILTER METHODS">.
+
+=item register_checker
+
+    $validator->register_checker( FOO => sub { ... } );
+    $validator->register_checker(
+        FOO => sub { ... },
+        BAR => sub { ... },
+        ...
+    );
+
+Registers checker methods.
+
+Requisites for checker methods are described in L<"REQUISITE FOR CHECKER METHODS">.
+
+=item register_procedure
+
+    $validator->register_procedure( FOO => sub { ... } );
+    $validator->register_procedure(
+        FOO => sub { ... },
+        BAR => sub { ... },
+        ...
+    );
+
+Registers procedure methods.
+
+Requisites for procedure methods are described in L<"REQUISITE FOR PROCEDURE METHODS">.
+
+=item register_filter_class
+
+    # register filter methods of Validator::Procedural::Filter::Common
+    $validator->register_filter_class('::Common');
+
+    $validator->register_filter_class('MY::Own::Filter::Class');
+
+    # restrict registering methods (like Perl's importer)
+    $validator->register_filter_class('::Text', 'TRIM', 'LTRIM');
+
+Register filter methods from specified module.
+(Modules will be loaded automatically.)
+
+=item register_checker_class
+
+    # register checker methods of Validator::Procedural::Checker::Common
+    $validator->register_checker_class('::Common');
+
+    $validator->register_checker_class('MY::Own::Checker::Class');
+
+    # restrict registering methods
+    $validator->register_checker_class('::Number', 'BIG', 'SMALL');
+
+Register checker methods from specified module.
+(Modules will be loaded automatically.)
+
+=item register_procedure_class
+
+    # register procedure methods of Validator::Procedural::Procedure::Common
+    $validator->register_procedure_class('::Common');
+
+    $validator->register_procedure_class('MY::Own::Procedure::Class');
+
+    # restrict registering methods
+    $validator->register_procedure_class('::Text', 'address', 'telephone');
+
+Register procedure methods from specified module.
+(Modules will be loaded automatically.)
+
+=back
+
+=head1 REQUISITE FOR FILTER METHODS
+
+=head1 REQUISITE FOR CHECKER METHODS
+
+=head1 REQUISITE FOR PROCEDURE METHODS
 
 =head1 LICENSE
 
