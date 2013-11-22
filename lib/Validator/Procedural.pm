@@ -655,7 +655,7 @@ Register procedure methods from specified module.
     $validator->register_filter(
         TRIM => sub {
             s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
-j           $_      # should return filtered value
+            $_;     # should return filtered value
         },
     );
 

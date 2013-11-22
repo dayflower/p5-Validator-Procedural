@@ -253,7 +253,7 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
     $validator->register_filter(
         TRIM => sub {
             s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
-j           $_      # should return filtered value
+            $_;     # should return filtered value
         },
     );
 
