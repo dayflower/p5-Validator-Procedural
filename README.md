@@ -248,6 +248,25 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
     Register procedure methods from specified module.
     (Modules will be loaded automatically.)
 
+- process
+- apply\_filter
+- check
+- value
+- values
+- success
+- has\_error
+- valid\_fields
+- invalid\_fields
+- errors
+- error
+- valid
+- invalid
+- add\_error
+- clear\_errors
+- set\_errors
+- error\_messages
+- error\_message
+
 # REQUISITES FOR FILTER METHODS
 
     $validator->register_filter(

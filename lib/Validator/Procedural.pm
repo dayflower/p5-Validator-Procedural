@@ -648,6 +648,42 @@ Register checker methods from specified module.
 Register procedure methods from specified module.
 (Modules will be loaded automatically.)
 
+=item process
+
+=item apply_filter
+
+=item check
+
+=item value
+
+=item values
+
+=item success
+
+=item has_error
+
+=item valid_fields
+
+=item invalid_fields
+
+=item errors
+
+=item error
+
+=item valid
+
+=item invalid
+
+=item add_error
+
+=item clear_errors
+
+=item set_errors
+
+=item error_messages
+
+=item error_message
+
 =back
 
 =head1 REQUISITES FOR FILTER METHODS
