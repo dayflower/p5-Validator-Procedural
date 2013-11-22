@@ -321,7 +321,8 @@ Then you may filter things, and you may check constraints.
 
 Returned value will not be used (but will reflect into result of `process()` method).
 
-Especially procedure is specified as argument for `process()`, you can conjunct multiple parameters into a field.
+Especially when procedure is specified as argument for `process()`, you can conjunct multiple parameters into a field.
+(Of course in registered procedures, you can set value explicity, but it seems useless.)
 
     $validator->process('tel',
         sub {
