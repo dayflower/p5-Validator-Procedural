@@ -654,6 +654,24 @@ Register procedure methods from specified module.
 
 =head1 REQUISITE FOR FILTER METHODS
 
+    $validator->register_filter(
+        TRIM => sub {
+            s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
+j           $_      # should return filtered value
+        },
+    );
+
+Filter methods accept original value from C<$_> and should return filtered values.
+
+You can receive original value from method arguments, following options specified in C<apply_filter()>.
+
+    $validator->register_filter(
+        REPEAT => sub {
+            my ($value, $option) = @_;
+            return $value x $options->{times};
+        },
+    );
+
 =head1 REQUISITE FOR CHECKER METHODS
 
 =head1 REQUISITE FOR PROCEDURE METHODS
