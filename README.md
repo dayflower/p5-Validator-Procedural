@@ -264,7 +264,7 @@ You can receive original value from method arguments, following options specifie
     $validator->register_filter(
         REPEAT => sub {
             my ($value, $option) = @_;
-            return $value x $options->{times};
+            return $value x $option->{times};
         },
     );
 
