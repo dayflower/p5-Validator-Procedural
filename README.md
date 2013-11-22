@@ -47,7 +47,7 @@ Validator::Procedural - Procedural validator
     );
 
     # can register common filtering and checking procedure (not required)
-    $prot->register_procedure('DATETIME', sub {
+    $prot->register_procedure('datetime', sub {
         my ($field) = @_;
 
         # apply filters
@@ -157,15 +157,183 @@ THIS MODULE IS CURRENTLY ON WORKING DRAFT PHASE.  API MAY CHANGE.
 
 There are so many validation modules on CPAN.  Why yet another one?
 
-Some of modules provide good-looking features with simple configuration, but when I used those modules for compositing several fields and filtering fields (and for condition of some fields depending on other field), some were not able to handle such situation, some required custom handler.
+Some of such modules provide good-looking features with simple configuration. But when I used those modules for compositing several fields and filtering fields (and for condition of some fields depending on other field), some were not able to handle such situation, some required custom handler.
 
 So I focused on following points for design this module.
 
-- To provide compact but sufficient container for validation result
+- To provide compact but sufficient container for validation results
 - To provide filtering mechanism and functionality to retrieve filtered parameters
-- To depend on other modules as least as possible (complex validators and filters depending on other modules heavyly will be supplied as dependent plugin distributions)
+- To depend on other modules as least as possible (complex validators and filters depending on other modules heavyly should be supplied as dependent plugin distributions)
+- To make error message formatter independent of validator
 
-This module is NOT all-in-one validation product.  This module DOES NOT provide easy configuration.  But you have to implement validation procedure with Perl code, so on such a complex condition described above, you can make codes straightforwardly, easy to understand.
+This module is NOT all-in-one validation product.  This module DOES NOT provide easy configuration.  But you have to implement validation procedure with Perl code, so on such a complex condition described above, you can write codes straightforwardly, easy to understand.
+
+# METHODS
+
+- register\_filter
+
+        $validator->register_filter( FOO => sub { ... } );
+        $validator->register_filter(
+            FOO => sub { ... },
+            BAR => sub { ... },
+            ...
+        );
+
+    Registers filter methods.
+
+    Requisites for filter methods are described in ["REQUISITES FOR FILTER METHODS"](#REQUISITES FOR FILTER METHODS).
+
+- register\_checker
+
+        $validator->register_checker( FOO => sub { ... } );
+        $validator->register_checker(
+            FOO => sub { ... },
+            BAR => sub { ... },
+            ...
+        );
+
+    Registers checker methods.
+
+    Requisites for checker methods are described in ["REQUISITES FOR CHECKER METHODS"](#REQUISITES FOR CHECKER METHODS).
+
+- register\_procedure
+
+        $validator->register_procedure( foo => sub { ... } );
+        $validator->register_procedure(
+            foo => sub { ... },
+            bar => sub { ... },
+            ...
+        );
+
+    Registers procedure methods.
+
+    Requisites for procedure methods are described in ["REQUISITES FOR PROCEDURE METHODS"](#REQUISITES FOR PROCEDURE METHODS).
+
+- register\_filter\_class
+
+        # register filter methods of Validator::Procedural::Filter::Common
+        $validator->register_filter_class('::Common');
+
+        $validator->register_filter_class('MY::Own::Filter::Class');
+
+        # restrict registering methods (like Perl's importer)
+        $validator->register_filter_class('::Text', 'TRIM', 'LTRIM');
+
+    Register filter methods from specified module.
+    (Modules will be loaded automatically.)
+
+- register\_checker\_class
+
+        # register checker methods of Validator::Procedural::Checker::Common
+        $validator->register_checker_class('::Common');
+
+        $validator->register_checker_class('MY::Own::Checker::Class');
+
+        # restrict registering methods
+        $validator->register_checker_class('::Number', 'BIG', 'SMALL');
+
+    Register checker methods from specified module.
+    (Modules will be loaded automatically.)
+
+- register\_procedure\_class
+
+        # register procedure methods of Validator::Procedural::Procedure::Common
+        $validator->register_procedure_class('::Common');
+
+        $validator->register_procedure_class('MY::Own::Procedure::Class');
+
+        # restrict registering methods
+        $validator->register_procedure_class('::Text', 'address', 'telephone');
+
+    Register procedure methods from specified module.
+    (Modules will be loaded automatically.)
+
+# REQUISITES FOR FILTER METHODS
+
+    $validator->register_filter(
+        TRIM => sub {
+            s{ (?: \A \s+ | \s+ \z ) }{}gxmso;
+j           $_      # should return filtered value
+        },
+    );
+
+Filter methods accept original value from `$_` and should return filtered values.
+
+You can receive original value from method arguments, following options specified in `apply_filter()` method.
+
+    $validator->register_filter(
+        REPEAT => sub {
+            my ($value, $option) = @_;
+            return $value x $options->{times};
+        },
+    );
+
+# REQUISITES FOR CHECKER METHODS
+
+    $validator->register_checker(
+        EMAIL => sub {
+            unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
+                return 'INVALID';   # error code for errors
+            }
+
+            return;                 # (undef) for OK
+        },
+    );
+
+Filter methods accept single value from `$_` and should return error codes (yes you can return multiple error codes), or return undef for success.
+
+If you want to check multiple values supplied, you can capture from method arguments, following options specified in `check()` method.
+
+    $validator->register_checker(
+        CONTAINS => sub {
+            my $option = pop @_;
+            my (@vals) = @_;
+
+            unless (grep { $_ eq $option->{target} } @vals) {
+                return 'ABSENT';
+            }
+
+            return;
+        },
+    );
+
+
+
+# REQUISITES FOR PROCEDURE METHODS
+
+    $validator->register_procedure(
+        exists => sub {
+            my ($field) = @_;
+
+            # apply filters
+            $field->apply_filter('TRIM');
+
+            # apply checkers
+            return unless $field->check('EXISTS');
+        }
+    );
+
+Requisites for procedure methods are quite simple.
+Do what you want.
+
+[Validator::Procedural::Field](https://metacpan.org/pod/Validator::Procedural::Field) parameter is supplied as argument.
+Then you may filter things, and you may check constraints.
+
+Returned value will not be used (but will reflect into result of `process()` method).
+
+Especially procedure is specified as argument for `process()`, you can conjunct multiple parameters into a field.
+
+    $validator->process('tel',
+        sub {
+            my ($field) = @_;
+
+            $field->value( sprintf '%s-%s-%s', $param->{tel1}, $param->{tel2}, $param->{tel3} );
+
+            $field->apply_filter('TOUPPER');
+
+            return unless $field->check('TEL');
+        }
+    );
 
 # LICENSE
 
