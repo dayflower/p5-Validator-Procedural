@@ -256,8 +256,6 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
     If formatter is not specified, an instance of [Validator::Procedural::Formatter::Minimal](https://metacpan.org/pod/Validator::Procedural::Formatter::Minimal) will be used as formatter on the first generation of error messages.
 
 - process
-- apply\_filter
-- check
 - value
 - values
 - success
@@ -277,6 +275,8 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
     For further information for what APIs do, please refer to ["METHODS" in Validator::Procedural::Field](https://metacpan.org/pod/Validator::Procedural::Field#METHODS).
 
+- apply\_filter
+- check
 - add\_error
 
         $validator->add_error('field_name', 'ERROR_CODE', 'ERROR_CODE', ...);

@@ -657,10 +657,6 @@ If formatter is not specified, an instance of L<Validator::Procedural::Formatter
 
 =item process
 
-=item apply_filter
-
-=item check
-
 =item value
 
 =item values
@@ -690,6 +686,10 @@ But those are convenient when you want to set validation state from the outside 
 (You already have faced such a situation I believe.)
 
 For further information for what APIs do, please refer to L<Validator::Procedural::Field/"METHODS">.
+
+=item apply_filter
+
+=item check
 
 =item add_error
 
