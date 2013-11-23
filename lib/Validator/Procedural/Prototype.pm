@@ -65,7 +65,7 @@ Optionally filters / checkers / procedures can be specified.
 
 Generates L<Validator::Procedural> instance from the prototype.
 
-Registerd filter / checker / procedure methods in the prototype will be inherited by generated instances.
+Registerd filter / checker / procedure methods and error message formatter in the prototype will be inherited by generated instances.
 
 Doesn't consume any arguments.  (in current API)
 
@@ -85,6 +85,10 @@ Above 6 methods are same as L<Validator::Procedural>.
 See L<Validator::Procedural/"METHODS"> for illustrations.
 
 =item register_formatter
+
+    $prot->register_formatter( $formatter_instance );
+
+Register error message formatter object.
 
 =back
 

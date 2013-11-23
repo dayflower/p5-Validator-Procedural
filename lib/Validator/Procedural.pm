@@ -650,6 +650,11 @@ Register procedure methods from specified module.
 
 =item formatter
 
+    $validator->formatter( $formatter_instance );
+
+Register error message formatter object.
+If formatter is not specified, an instance of L<Validator::Procedural::Formatter::Minimal> will be used as formatter on the first generation of error messages.
+
 =item process
 
 =item apply_filter

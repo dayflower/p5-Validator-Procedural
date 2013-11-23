@@ -248,6 +248,13 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
     Register procedure methods from specified module.
     (Modules will be loaded automatically.)
 
+- formatter
+
+        $validator->formatter( $formatter_instance );
+
+    Register error message formatter object.
+    If formatter is not specified, an instance of [Validator::Procedural::Formatter::Minimal](https://metacpan.org/pod/Validator::Procedural::Formatter::Minimal) will be used as formatter on the first generation of error messages.
+
 - process
 - apply\_filter
 - check
