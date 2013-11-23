@@ -648,6 +648,8 @@ Register checker methods from specified module.
 Register procedure methods from specified module.
 (Modules will be loaded automatically.)
 
+=item formatter
+
 =item process
 
 =item apply_filter

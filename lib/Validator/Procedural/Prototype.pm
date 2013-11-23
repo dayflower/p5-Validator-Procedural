@@ -81,8 +81,10 @@ Doesn't consume any arguments.  (in current API)
 
 =item register_procedure_class
 
-These 6 methods are same as L<Validator::Procedural>.
+Above 6 methods are same as L<Validator::Procedural>.
 See L<Validator::Procedural/"METHODS"> for illustrations.
+
+=item register_formatter
 
 =back
 
