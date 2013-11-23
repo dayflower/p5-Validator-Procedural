@@ -439,15 +439,17 @@ Validator::Procedural - Procedural validator
     );
 
     # can register common filtering and checking procedure (not required)
-    $prot->register_procedure('datetime', sub {
-        my ($field) = @_;
+    $prot->register_procedure(
+        name => sub {
+            my ($field) = @_;
 
-        # apply filters
-        $field->apply_filter('TRIM');
+            # apply filters
+            $field->apply_filter('TRIM');
 
-        # apply checkers
-        return unless $field->check('EXISTS');
-    });
+            # apply checkers
+            return unless $field->check('EXISTS');
+        }
+    );
 
     # register error message formatter (default is Validator::Procedural::Formatter::Minimal)
     $prot->register_formatter(Validator::Procedural::Formatter::Minimal->new());
@@ -465,21 +467,17 @@ Validator::Procedural - Procedural validator
         # apply filters
         $field->apply_filter('TRIM');
 
-        # filter value manually
-        my $val = $field->value();
-        $field->value($val . ' +0000');
-
         # apply checkers
         return unless $field->check('EXISTS');
 
+        # filter value by hand
+        my $val = $field->value;
+        $val =~ s/-//g;
+        $field->value($val);
+
         # check value manually
-        eval {
-            require Time::Piece;
-            Time::Piece->strptime($field->value, '%Y-%m-%d %z');
-        };
-        if ($@) {
-            $field->add_error('INVALID_DATE');
-            return;
+        unless ($field->value =~ /^\d{7}/) {
+            $field->add_error('INVALID');
         }
     });
 
@@ -847,7 +845,7 @@ If you want to check multiple values supplied, you can capture from method argum
 =head1 REQUISITES FOR PROCEDURE METHODS
 
     $validator->register_procedure(
-        exists => sub {
+        datetime => sub {
             my ($field) = @_;
 
             # apply filters
@@ -855,6 +853,20 @@ If you want to check multiple values supplied, you can capture from method argum
 
             # apply checkers
             return unless $field->check('EXISTS');
+
+            # filter value by hand
+            my $val = $field->value();
+            $field->value($val . ' +0000');
+
+            # check value manually
+            eval {
+                require Time::Piece;
+                Time::Piece->strptime($field->value, '%Y-%m-%d %z');
+            };
+            if ($@) {
+                $field->add_error('INVALID_DATE');
+                return;
+            }
         }
     );
 
