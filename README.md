@@ -256,18 +256,110 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
     If formatter is not specified, an instance of [Validator::Procedural::Formatter::Minimal](https://metacpan.org/pod/Validator::Procedural::Formatter::Minimal) will be used as formatter on the first generation of error messages.
 
 - process
+
+        my $result = $validor->process('field_name', 'PROCEDURE');
+        my $result = $validor->process('field_name', sub { ... });
+
+    Executes validation procedure.
+
+    Procedures are provided in procedure names or in subroutine references.
+
+        my $result = $validor->process('field_name', 'PROCEDURE', $value1, $value2, ...);
+        my $result = $validor->process('field_name', sub { ... }, $value1, $value2, ...);
+
+    If you specify values after procedure for arguments, they will be used as initial values for procedure.
+
 - value
+
+            my $val  = $validator->valud('field_name');     # retrieve first value
+            my @vals = $validator->valud('field_name');
+            
+        $validator->value('field_name', $value);
+        $validator->value('field_name', $multi_value1, $multi_value2, ...);
+
+    Gets and sets field value.
+
+    On retrieval, first value of multiple values are returned in scalar context.
+    In array context all of values are returned.
+
 - values
+
+        my $values = $validator->values();
+        my %values = $validator->values();
+
+    Gets all values for all fields.
+
+    In scalar context, [Hash::MultiValue](https://metacpan.org/pod/Hash::MultiValue) will be returned.
+
+    In array context, field names and values pairs are returned.
+    Order of fields corresponds to order of processing.
+
 - success
+
+    Returns true if result has no error.
+
 - has\_error
+
+    Returns true if result has error.
+
 - valid\_fields
+
+    Returns names of valid fields.
+
 - invalid\_fields
+
+        my @fields = $validator->invalid_fields();
+        my @fields = $validator->invalid_fields('ERROR_CODE1', 'ERROR_CODE2', ...);
+        my @fields = $validator->invalid_fields(sub { ... });
+
+    Returns names of invalid fields.
+
+    When error codes are specified, only fields which have specified error codes are returned.
+
+    Error code filtering methods can also be supplied as arguments.
+
 - errors
+
+        my %errors = $validator->errors();
+        my $errors = $validator->errors();
+        # => +{
+        #       field1 => [ 'ERROR_CODE1' ],
+        #       field2 => [ 'ERROR_CODE1', 'ERROR_CODE2' ],
+        #       ...
+        #    }
+
+    Returns field names and error codes mappings.
+
+    In scalar context, hash-ref will be returned.
+    In array context, order of fields corresponds to order of processing.
+
 - error
+
+        my @errors = $validator->error('field_name');
+
+    Returns error codes for specified field.
+
 - valid
+
+    Returns true when specified field is valid.
+
 - invalid
+
+    Returns true when specified field is invalid.
+
 - error\_messages
+
+        my @messages = $validator->error_messages();
+
+    Gets error messages in array.
+
+    Error messages will be formatted by `formatter()` instance.
+
 - error\_message
+
+        my @messages = $validator->error_message('field_name');
+
+    Gets error messages for specified field in array.
 
     # INTERNAL API METHODS
 
