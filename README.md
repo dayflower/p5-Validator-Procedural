@@ -269,14 +269,21 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 - error\_messages
 - error\_message
 
+    # INTERNAL API METHODS
+
     Following methods are considered as somewhat of internal APIs.
-    But those are convenient when you want to set validation state from the outside of validation procedures.
-    (You already have faced such a situation I believe.)
+    But these are convenient when you want to set validation state from the outside of validation procedures (You already have faced such a situation I believe), so usage of these are not restricted.
 
     For further information for what APIs do, please refer to ["METHODS" in Validator::Procedural::Field](https://metacpan.org/pod/Validator::Procedural::Field#METHODS).
 
 - apply\_filter
+
+        $validator->apply_filter('field_name', 'FILTER');
+        $validator->apply_filter('field_name', 'FILTER', %options);
 - check
+
+        $validator->check('field_name', 'CHECKER');
+        $validator->check('field_name', 'CHECKER', %options);
 - add\_error
 
         $validator->add_error('field_name', 'ERROR_CODE', 'ERROR_CODE', ...);

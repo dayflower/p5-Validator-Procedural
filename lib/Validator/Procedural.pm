@@ -681,15 +681,22 @@ If formatter is not specified, an instance of L<Validator::Procedural::Formatter
 
 =item error_message
 
+=head1 INTERNAL API METHODS
+
 Following methods are considered as somewhat of internal APIs.
-But those are convenient when you want to set validation state from the outside of validation procedures.
-(You already have faced such a situation I believe.)
+But these are convenient when you want to set validation state from the outside of validation procedures (You already have faced such a situation I believe), so usage of these are not restricted.
 
 For further information for what APIs do, please refer to L<Validator::Procedural::Field/"METHODS">.
 
 =item apply_filter
 
+    $validator->apply_filter('field_name', 'FILTER');
+    $validator->apply_filter('field_name', 'FILTER', %options);
+
 =item check
+
+    $validator->check('field_name', 'CHECKER');
+    $validator->check('field_name', 'CHECKER', %options);
 
 =item add_error
 
