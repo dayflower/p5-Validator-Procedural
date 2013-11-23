@@ -261,11 +261,26 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 - error
 - valid
 - invalid
-- add\_error
-- clear\_errors
-- set\_errors
 - error\_messages
 - error\_message
+
+    Following methods are considered as somewhat of internal APIs.
+    But those are convenient when you want to set validation state from the outside of validation procedures.
+    (You already have faced such a situation I believe.)
+
+    For further information for what APIs do, please refer to ["METHODS" in Validator::Procedural::Field](https://metacpan.org/pod/Validator::Procedural::Field#METHODS).
+
+- add\_error
+
+        $validator->add_error('field_name', 'ERROR_CODE', 'ERROR_CODE', ...);
+- clear\_errors
+
+        $validator->clear_errors('field_name');
+        $validator->clear_errors();             # clears all errors
+- set\_errors
+
+        $validator->set_errors('field_name', 'ERROR_CODE', 'ERROR_CODE', ...);
+        $validator->set_errors('field_name');   # same as clear_errors('field_name');
 
 # REQUISITES FOR FILTER METHODS
 
