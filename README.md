@@ -271,9 +271,9 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - value
 
-            my $val  = $validator->valud('field_name');     # retrieve first value
-            my @vals = $validator->valud('field_name');
-            
+        my $val  = $validator->valud('field_name');     # retrieve first value
+        my @vals = $validator->valud('field_name');
+
         $validator->value('field_name', $value);
         $validator->value('field_name', $multi_value1, $multi_value2, ...);
 
@@ -284,7 +284,7 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - values
 
-        my $values = $validator->values();
+        my $values = $validator->values();  # => instance of Hash::MultiValue
         my %values = $validator->values();
 
     Gets all values for all fields.
@@ -493,12 +493,12 @@ Especially when procedure is specified as argument for `process()`, you can conj
 # REQUISITES FOR MESSAGE FORMATTER CLASS
 
     package My::Message::Formatter;
-    
+
     sub new { ... }
-    
+
     sub format {
         my ($self, $field_name, @error_codes) = @_;
-    
+
         my @msgs = map { sprintf '%s is %s.', $field_name, $_ } @error_codes;
         return @msgs;
     }

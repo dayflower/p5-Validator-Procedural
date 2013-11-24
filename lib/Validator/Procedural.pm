@@ -679,7 +679,7 @@ If you specify values after procedure for arguments, they will be used as initia
 
     my $val  = $validator->valud('field_name');     # retrieve first value
     my @vals = $validator->valud('field_name');
-    
+
     $validator->value('field_name', $value);
     $validator->value('field_name', $multi_value1, $multi_value2, ...);
 
@@ -690,7 +690,7 @@ In array context all of values are returned.
 
 =item values
 
-    my $values = $validator->values();
+    my $values = $validator->values();  # => instance of Hash::MultiValue
     my %values = $validator->values();
 
 Gets all values for all fields.
@@ -904,12 +904,12 @@ Especially when procedure is specified as argument for C<process()>, you can con
 =head1 REQUISITES FOR MESSAGE FORMATTER CLASS
 
     package My::Message::Formatter;
-    
+
     sub new { ... }
-    
+
     sub format {
         my ($self, $field_name, @error_codes) = @_;
-    
+
         my @msgs = map { sprintf '%s is %s.', $field_name, $_ } @error_codes;
         return @msgs;
     }
