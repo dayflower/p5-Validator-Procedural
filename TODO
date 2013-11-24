@@ -1,5 +1,6 @@
 # TODO
 
-- Make ctor accept filter / checker / procedure classes
+- Make ctor acceptable filter / checker / procedure classes
 - Create Validator::Procedural::Filter::Common
 - Create Validator::Procedural::Checker::Common
+- Make remove_field() acceptable filtering subroutine

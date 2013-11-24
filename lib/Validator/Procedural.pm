@@ -163,6 +163,17 @@ sub field {
     return Validator::Procedural::Field->new($self, $field_name);
 }
 
+sub remove_field {
+    my ($self, @field_names) = @_;
+
+    foreach my $field_name (@field_names) {
+        $self->value($field_name, undef);
+        $self->clear_errors($field_name);
+    }
+
+    return $self;
+}
+
 sub value {
     my ($self, $field) = splice @_, 0, 2;
 
