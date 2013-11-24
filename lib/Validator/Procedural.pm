@@ -123,7 +123,7 @@ sub new {
 sub formatter {
     my $self = shift;
     if (@_) {
-        $self->{formatter} = shift;
+        $self->register_formatter(@_);
     }
 
     unless ($self->{formatter}) {
@@ -132,6 +132,12 @@ sub formatter {
     }
 
     return $self->{formatter};
+}
+
+sub register_formatter {
+    my ($self, $formatter) = @_;
+    $self->{formatter} = $formatter;
+    return $self;
 }
 
 sub process {
