@@ -72,7 +72,7 @@ __END__
 
 =head1 NAME
 
-Validator::Procedural::Formatter::Minimal - ...
+Validator::Procedural::Formatter::Minimal - Minimal message formatter for Validator::Procedural
 
 =head1 SYNOPSIS
 
@@ -97,7 +97,7 @@ Validator::Procedural::Formatter::Minimal - ...
 
 =head1 DESCRIPTION
 
-Validator::Procedural::Formatter::Minimal is ...
+Validator::Procedural::Formatter::Minimal is a minimal message formatter for L<Validator::Procedural> bundled.
 
 =head1 LICENSE
 
