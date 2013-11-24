@@ -251,6 +251,8 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
         $validator->formatter( $formatter_instance );
 
     Register error message formatter object.
+    Requisites for message formatter class is described in ["REQUISITES FOR MESSAGE FORMATTER CLASS"](#REQUISITES FOR MESSAGE FORMATTER CLASS).
+
     If formatter is not specified, an instance of [Validator::Procedural::Formatter::Minimal](https://metacpan.org/pod/Validator::Procedural::Formatter::Minimal) will be used as formatter on the first generation of error messages.
 
 - process
@@ -487,6 +489,21 @@ Especially when procedure is specified as argument for `process()`, you can conj
             return unless $field->check('TEL');
         }
     );
+
+# REQUISITES FOR MESSAGE FORMATTER CLASS
+
+    package My::Message::Formatter;
+    
+    sub new { ... }
+    
+    sub format {
+        my ($self, $field_name, @error_codes) = @_;
+    
+        my @msgs = map { sprintf '%s is %s.', $field_name, $_ } @error_codes;
+        return @msgs;
+    }
+
+Message formatter class must have `format()` method, which accepts field name and error codes as arguments. It should return error message(s).
 
 # LICENSE
 

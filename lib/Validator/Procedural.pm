@@ -651,6 +651,8 @@ Register procedure methods from specified module.
     $validator->formatter( $formatter_instance );
 
 Register error message formatter object.
+Requisites for message formatter class is described in L<"REQUISITES FOR MESSAGE FORMATTER CLASS">.
+
 If formatter is not specified, an instance of L<Validator::Procedural::Formatter::Minimal> will be used as formatter on the first generation of error messages.
 
 =item process
@@ -892,6 +894,21 @@ Especially when procedure is specified as argument for C<process()>, you can con
             return unless $field->check('TEL');
         }
     );
+
+=head1 REQUISITES FOR MESSAGE FORMATTER CLASS
+
+    package My::Message::Formatter;
+    
+    sub new { ... }
+    
+    sub format {
+        my ($self, $field_name, @error_codes) = @_;
+    
+        my @msgs = map { sprintf '%s is %s.', $field_name, $_ } @error_codes;
+        return @msgs;
+    }
+
+Message formatter class must have C<format()> method, which accepts field name and error codes as arguments. It should return error message(s).
 
 =head1 LICENSE
 
