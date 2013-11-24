@@ -114,6 +114,8 @@ subtest "valid_fields, invalid_fields, valid, invalid" => sub {
     is_deeply [$vldr->invalid_fields], [qw( )];
 };
 
+# TODO test for filtering mech of #invalid_fields().
+
 subtest "errors, error" => sub {
     my $vldr = Validator::Procedural->new();
     $vldr->add_error('foo', 'WORLD');
