@@ -21,7 +21,7 @@ sub register_filter {
 sub register_checker {
     my ($self, @args) = @_;
     while (my ($name, $checker) = splice @args, 0, 2) {
-        $self->{checker}->{$name} = $checker;
+        $self->{checkers}->{$name} = $checker;
     }
     return $self;
 }
