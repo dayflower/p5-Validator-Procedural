@@ -170,7 +170,6 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - register\_filter
 
-        $validator->register_filter( FOO => sub { ... } );
         $validator->register_filter(
             FOO => sub { ... },
             BAR => sub { ... },
@@ -183,7 +182,6 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - register\_checker
 
-        $validator->register_checker( FOO => sub { ... } );
         $validator->register_checker(
             FOO => sub { ... },
             BAR => sub { ... },
@@ -196,7 +194,6 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - register\_procedure
 
-        $validator->register_procedure( foo => sub { ... } );
         $validator->register_procedure(
             foo => sub { ... },
             bar => sub { ... },

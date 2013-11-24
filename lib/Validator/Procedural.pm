@@ -587,7 +587,6 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 =item register_filter
 
-    $validator->register_filter( FOO => sub { ... } );
     $validator->register_filter(
         FOO => sub { ... },
         BAR => sub { ... },
@@ -600,7 +599,6 @@ Requisites for filter methods are described in L<"REQUISITES FOR FILTER METHODS"
 
 =item register_checker
 
-    $validator->register_checker( FOO => sub { ... } );
     $validator->register_checker(
         FOO => sub { ... },
         BAR => sub { ... },
@@ -613,7 +611,6 @@ Requisites for checker methods are described in L<"REQUISITES FOR CHECKER METHOD
 
 =item register_procedure
 
-    $validator->register_procedure( foo => sub { ... } );
     $validator->register_procedure(
         foo => sub { ... },
         bar => sub { ... },
