@@ -29,7 +29,7 @@ sub register_checker {
 sub register_procedure {
     my ($self, @args) = @_;
     while (my ($name, $procedure) = splice @args, 0, 2) {
-        $self->{procedure}->{$name} = $procedure;
+        $self->{procedures}->{$name} = $procedure;
     }
     return $self;
 }
