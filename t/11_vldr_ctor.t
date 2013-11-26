@@ -29,24 +29,24 @@ subtest "ctor" => sub {
     );
 
     $vldr->process('f1', sub { $_[0]->apply_filter('FILTER1') }, "");
-    is $vldr->value('f1'), 'FILTER1';
+    is $vldr->results->value('f1'), 'FILTER1';
 
     $vldr->process('f2', sub { $_[0]->apply_filter('FILTER2') }, "");
-    is $vldr->value('f2'), 'FILTER2';
+    is $vldr->results->value('f2'), 'FILTER2';
 
     $vldr->process('f3', sub { $_[0]->check('CHECKER1') }, "");
-    is_deeply [ $vldr->error('f3') ], [ 'CHECKER1' ];
+    is_deeply [ $vldr->results->error('f3') ], [ 'CHECKER1' ];
 
     $vldr->process('f4', sub { $_[0]->check('CHECKER2') }, "");
-    is_deeply [ $vldr->error('f4') ], [ 'CHECKER2' ];
+    is_deeply [ $vldr->results->error('f4') ], [ 'CHECKER2' ];
 
     $vldr->process('f5', 'procedure1', "");
-    is_deeply [ $vldr->error('f5') ], [ 'procedure1' ];
+    is_deeply [ $vldr->results->error('f5') ], [ 'procedure1' ];
 
     $vldr->process('f6', 'procedure2', "");
-    is_deeply [ $vldr->error('f6') ], [ 'procedure2' ];
+    is_deeply [ $vldr->results->error('f6') ], [ 'procedure2' ];
 
-    is $vldr->formatter->format('f0', 'ERROR1'), 'formatter1';
+    is $vldr->results->formatter->format('f0', 'ERROR1'), 'formatter1';
 
     # absent filter / checker / procedure
 
@@ -71,13 +71,13 @@ subtest "register_filter" => sub {
     );
 
     $vldr->process('f1', sub { $_[0]->apply_filter('FILTER1') }, "");
-    is $vldr->value('f1'), 'C1';
+    is $vldr->results->value('f1'), 'C1';
 
     $vldr->process('f2', sub { $_[0]->apply_filter('FILTER2') }, "");
-    is $vldr->value('f2'), 'c2';
+    is $vldr->results->value('f2'), 'c2';
 
     $vldr->process('f3', sub { $_[0]->apply_filter('FILTER3') }, "");
-    is $vldr->value('f3'), 'c3';
+    is $vldr->results->value('f3'), 'c3';
 };
 
 subtest "register_checker" => sub {
@@ -94,13 +94,13 @@ subtest "register_checker" => sub {
     );
 
     $vldr->process('f1', sub { $_[0]->check('CHECKER1') }, "");
-    is_deeply [ $vldr->error('f1') ], [ 'C1' ];
+    is_deeply [ $vldr->results->error('f1') ], [ 'C1' ];
 
     $vldr->process('f2', sub { $_[0]->check('CHECKER2') }, "");
-    is_deeply [ $vldr->error('f2') ], [ 'c2-1', 'c2-2' ];
+    is_deeply [ $vldr->results->error('f2') ], [ 'c2-1', 'c2-2' ];
 
     $vldr->process('f3', sub { $_[0]->check('CHECKER3') }, "");
-    is_deeply [ $vldr->error('f3') ], [ 'c3' ];
+    is_deeply [ $vldr->results->error('f3') ], [ 'c3' ];
 };
 
 subtest "register_procedure" => sub {
@@ -117,13 +117,13 @@ subtest "register_procedure" => sub {
     );
 
     $vldr->process('f1', 'procedure1', "");
-    is_deeply [ $vldr->error('f1') ], [ 'P1' ];
+    is_deeply [ $vldr->results->error('f1') ], [ 'P1' ];
 
     $vldr->process('f2', 'procedure2', "");
-    is_deeply [ $vldr->error('f2') ], [ 'p2' ];
+    is_deeply [ $vldr->results->error('f2') ], [ 'p2' ];
 
     $vldr->process('f3', 'procedure3', "");
-    is_deeply [ $vldr->error('f3') ], [ 'p3' ];
+    is_deeply [ $vldr->results->error('f3') ], [ 'p3' ];
 };
 
 subtest "formatter" => sub {

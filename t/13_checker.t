@@ -11,25 +11,25 @@ subtest "simple checker" => sub {
 
     my $proc = sub { $_[0]->check('CHECKER') };
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, undef);
-    is_deeply [ $vldr->error('f') ], [ 'Z' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'Z' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, "");
-    is_deeply [ $vldr->error('f') ], [ 'Z' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'Z' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, 'a');
-    is_deeply [ $vldr->error('f') ], [ 'A' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'A' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, qw( a z ));
-    is_deeply [ $vldr->error('f') ], [ 'A' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'A' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, qw( x a ));
-    is_deeply [ $vldr->error('f') ], [ 'Z' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'Z' ];
 };
 
 subtest "checker for multiple" => sub {
@@ -44,29 +44,29 @@ subtest "checker for multiple" => sub {
 
     my $proc = sub { $_[0]->check('CHECKER') };
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, undef);
-    is_deeply [ $vldr->error('f') ], [ 'Z' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'Z' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, "");
-    is_deeply [ $vldr->error('f') ], [ 'Z' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'Z' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, 'a');
-    is_deeply [ $vldr->error('f') ], [ 'A' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'A' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, qw( a z ));
-    is_deeply [ $vldr->error('f') ], [ 'A' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'A' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, qw( x a ));
-    is_deeply [ $vldr->error('f') ], [ 'A' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'A' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, qw( x y ));
-    is_deeply [ $vldr->error('f') ], [ 'Z' ];
+    is_deeply [ $vldr->results->error('f') ], [ 'Z' ];
 };
 
 subtest "checker with options" => sub {
@@ -83,45 +83,45 @@ subtest "checker with options" => sub {
     my $proc2 = sub { $_[0]->check('CHECKER', c => 10) };
     my $proc3 = sub { $_[0]->check('CHECKER', c => 20) };
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc1, undef);
-    is_deeply [ $vldr->error('f') ], [ '<=' ];
+    is_deeply [ $vldr->results->error('f') ], [ '<=' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc1, 1);
-    is_deeply [ $vldr->error('f') ], [ '>' ];
+    is_deeply [ $vldr->results->error('f') ], [ '>' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc2, 1);
-    is_deeply [ $vldr->error('f') ], [ '<=' ];
+    is_deeply [ $vldr->results->error('f') ], [ '<=' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc3, 1);
-    is_deeply [ $vldr->error('f') ], [ '<=' ];
+    is_deeply [ $vldr->results->error('f') ], [ '<=' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc1, 11);
-    is_deeply [ $vldr->error('f') ], [ '>' ];
+    is_deeply [ $vldr->results->error('f') ], [ '>' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc2, 11);
-    is_deeply [ $vldr->error('f') ], [ '>' ];
+    is_deeply [ $vldr->results->error('f') ], [ '>' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc3, 11);
-    is_deeply [ $vldr->error('f') ], [ '<=' ];
+    is_deeply [ $vldr->results->error('f') ], [ '<=' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc1, 21);
-    is_deeply [ $vldr->error('f') ], [ '>' ];
+    is_deeply [ $vldr->results->error('f') ], [ '>' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc2, 21);
-    is_deeply [ $vldr->error('f') ], [ '>' ];
+    is_deeply [ $vldr->results->error('f') ], [ '>' ];
 
-    $vldr->clear_errors('f');
+    $vldr->results->clear_errors('f');
     $vldr->process('f', $proc3, 21);
-    is_deeply [ $vldr->error('f') ], [ '>' ];
+    is_deeply [ $vldr->results->error('f') ], [ '>' ];
 };
 
 done_testing;
