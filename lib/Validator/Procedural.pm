@@ -455,7 +455,7 @@ Validator::Procedural - Procedural validator
 
     use Validator::Procedural;
 
-    # create validator prototype with given filters / checkers.
+    # create prototype of validator
     my $prot = Validator::Procedural::Prototype->new(
         filters => {
             UCFIRST => sub { ucfirst },
@@ -465,134 +465,38 @@ Validator::Procedural - Procedural validator
         },
     );
 
-    # filter plugins can be applied to validator (prototypes).
-    Validator::Procedural::Filter::Common->register_to($prot, 'TRIM', 'LTRIM');
-    # also checker plugins can be
-    Validator::Procedural::Checker::Common->register_to($prot);
+    $prot->register_filter_class('::General');
+    $prot->register_checker_class('::General', 'EXISTS');
 
-    # filter class registration can be called from validator (prototypes).
-    # package begins with '::' is recognized under 'Validator::Procedural::Filter::' namespace.
-    $prot->register_filter_class('::Japanese', 'HAN2ZEN');
-    $prot->register_filter_class('MY::Own::Filter');
-    # also for checker class registration
-    # package begins with '::' is recognized under 'Validator::Procedural::Checker::' namespace.
-    $prot->register_checker_class('::Date');
-    $prot->register_checker_class('MY::Own::Checker', 'MYCHECKER');
-
-    # you can register filters (and checkers) after instantiation of prototype
-    $prot->register_filter(
-        TRIM => sub { s{ (?: \A \s+ | \s+ \z ) }{}gxmso; $_ },
-    );
-
-    $prot->register_checker(
-        EMAIL => sub {
-            # Of course this is not precise for email address, but just example.
-            unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
-                return 'INVALID';   # error code for errors
-            }
-
-            return;                 # (undef) for OK
-        },
-    );
-
-    # can register common filtering and checking procedure (not required)
-    $prot->register_procedure(
-        name => sub {
-            my ($field) = @_;
-
-            # apply filters
-            $field->apply_filter('TRIM');
-
-            # apply checkers
-            return unless $field->check('EXISTS');
-        }
-    );
-
-    # register error message formatter (default is Validator::Procedural::Formatter::Minimal)
-    $prot->register_formatter(Validator::Procedural::Formatter::Minimal->new());
-
-    # now create validator (with state) from prototype
+    # now create validator from prototype
     my $validator = $prot->create_validator();
 
-    # process for field 'bar' by custom procedure
+    # validate 'bar' field
     $validator->process('bar', sub {
         my ($field) = @_;
 
         # set value
-        $field->value($req->param('bar'));
+        $field->value($req->param('bar') . $req->param('baz'));
 
         # apply filters
         $field->apply_filter('TRIM');
+        $field->apply_filter('UCFIRST');
 
         # apply checkers
         return unless $field->check('EXISTS');
-
-        # filter value by hand
-        my $val = $field->value;
-        $val =~ s/-//g;
-        $field->value($val);
-
-        # check value manually
-        unless ($field->value =~ /^\d{7}/) {
-            $field->add_error('INVALID');
-        }
     });
-
-    # can apply registered procedure with given value
-    $validator->process('foo', 'DATETIME', $req->param('foo'));
-
 
     # retrieve validation result
     my $results = $validator->results;
 
-    $results->success();      # => TRUE or FALSE
-    $results->has_error();    # => ! success()
+    if ($results->has_error()) {
+        use JSON;
 
-    # retrieve fields and errors mapping
-    $results->errors();       # return errors errors in Array or Hash-ref (for scalar context)
-    # => (
-    #     foo => [ 'MISSING', 'INVALID_DATE' ],
-    # )
-
-    $results->invalid_fields();
-    # => ( 'foo', 'bar' )
-
-    # can filter fields that has given error code
-    $results->invalid_fields('MISSING');
-    # => ( 'foo', 'bar' )
-
-    # error code filtering rule can be supplied with subroutine
-    $results->invalid_fields(sub { grep { $_ eq 'MISSING' } @_ });
-    # => ( 'foo', 'bar' )
-
-    $results->valid('foo');       # => TRUE of FALSE
-    $results->invalid('foo');     # => ! valid()
-
-    # retrieve error codes (or empty for valid field)
-    $results->error('foo');       # return errors for specified field in Array
-    # => ( 'MISSING', 'INVALID_DATE' )
-
-    # clear all errors
-    $results->clear_errors();
-    # clear errors for specified fields
-    $results->clear_errors('foo');
-
-    # append error (manually)
-    $results->add_error('foo', 'MISSING');
-
-    # retrieve filtered value for specified field
-    $results->value('foo');
-    # retrieve all values filtered
-    $results->values();   # return values in Array or Hash::MultiValue (for scalar context)
-    # => (
-    #     foo => [ 'val1', 'val2' ],
-    #     var => [ 'val1' ],            # always in Array-ref for single value
-    # )
-
-    # retrieve error messages for all fields
-    $results->error_messages();
-    # retrieve error message(s) for given field
-    $results->error_message('foo');
+        return encode_json({
+            invalids => [ $results->invalid_fields() ],
+            messages => [ $results->error_messages() ],
+        });
+    }
 
 =head1 DESCRIPTION
 
@@ -988,6 +892,149 @@ Especially when procedure is specified as argument for C<process()>, you can con
     }
 
 Message formatter class must have C<format()> method, which accepts field name and error codes as arguments. It should return error message(s).
+
+=head1 FULL EXAMPLES
+
+    use Validator::Procedural;
+
+    # create validator prototype with given filters / checkers.
+    my $prot = Validator::Procedural::Prototype->new(
+        filters => {
+            UCFIRST => sub { ucfirst },
+        },
+        checkers => {
+            NUMERIC => sub { /^\d+$/ || 'INVALID' },
+        },
+    );
+
+    # filter plugins can be applied to validator (prototypes).
+    Validator::Procedural::Filter::Common->register_to($prot, 'TRIM', 'LTRIM');
+    # also checker plugins can be
+    Validator::Procedural::Checker::Common->register_to($prot);
+
+    # filter class registration can be called from validator (prototypes).
+    # package begins with '::' is recognized under 'Validator::Procedural::Filter::' namespace.
+    $prot->register_filter_class('::Japanese', 'HAN2ZEN');
+    $prot->register_filter_class('MY::Own::Filter');
+    # also for checker class registration
+    # package begins with '::' is recognized under 'Validator::Procedural::Checker::' namespace.
+    $prot->register_checker_class('::Date');
+    $prot->register_checker_class('MY::Own::Checker', 'MYCHECKER');
+
+    # you can register filters (and checkers) after instantiation of prototype
+    $prot->register_filter(
+        TRIM => sub { s{ (?: \A \s+ | \s+ \z ) }{}gxmso; $_ },
+    );
+
+    $prot->register_checker(
+        EMAIL => sub {
+            # Of course this is not precise for email address, but just example.
+            unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
+                return 'INVALID';   # error code for errors
+            }
+
+            return;                 # (undef) for OK
+        },
+    );
+
+    # can register common filtering and checking procedure (not required)
+    $prot->register_procedure(
+        name => sub {
+            my ($field) = @_;
+
+            # apply filters
+            $field->apply_filter('TRIM');
+
+            # apply checkers
+            return unless $field->check('EXISTS');
+        }
+    );
+
+    # register error message formatter (default is Validator::Procedural::Formatter::Minimal)
+    $prot->register_formatter(Validator::Procedural::Formatter::Minimal->new());
+
+    # now create validator (with state) from prototype
+    my $validator = $prot->create_validator();
+
+    # process for field 'bar' by custom procedure
+    $validator->process('bar', sub {
+        my ($field) = @_;
+
+        # set value
+        $field->value($req->param('bar'));
+
+        # apply filters
+        $field->apply_filter('TRIM');
+
+        # apply checkers
+        return unless $field->check('EXISTS');
+
+        # filter value by hand
+        my $val = $field->value;
+        $val =~ s/-//g;
+        $field->value($val);
+
+        # check value manually
+        unless ($field->value =~ /^\d{7}/) {
+            $field->add_error('INVALID');
+        }
+    });
+
+    # can apply registered procedure with given value
+    $validator->process('foo', 'DATETIME', $req->param('foo'));
+
+
+    # retrieve validation result
+    my $results = $validator->results;
+
+    $results->success();      # => TRUE or FALSE
+    $results->has_error();    # => ! success()
+
+    # retrieve fields and errors mapping
+    $results->errors();       # return errors errors in Array or Hash-ref (for scalar context)
+    # => (
+    #     foo => [ 'MISSING', 'INVALID_DATE' ],
+    # )
+
+    $results->invalid_fields();
+    # => ( 'foo', 'bar' )
+
+    # can filter fields that has given error code
+    $results->invalid_fields('MISSING');
+    # => ( 'foo', 'bar' )
+
+    # error code filtering rule can be supplied with subroutine
+    $results->invalid_fields(sub { grep { $_ eq 'MISSING' } @_ });
+    # => ( 'foo', 'bar' )
+
+    $results->valid('foo');       # => TRUE of FALSE
+    $results->invalid('foo');     # => ! valid()
+
+    # retrieve error codes (or empty for valid field)
+    $results->error('foo');       # return errors for specified field in Array
+    # => ( 'MISSING', 'INVALID_DATE' )
+
+    # clear all errors
+    $results->clear_errors();
+    # clear errors for specified fields
+    $results->clear_errors('foo');
+
+    # append error (manually)
+    $results->add_error('foo', 'MISSING');
+
+    # retrieve filtered value for specified field
+    $results->value('foo');
+    # retrieve all values filtered
+    $results->values();   # return values in Array or Hash::MultiValue (for scalar context)
+    # => (
+    #     foo => [ 'val1', 'val2' ],
+    #     var => [ 'val1' ],            # always in Array-ref for single value
+    # )
+
+    # retrieve error messages for all fields
+    $results->error_messages();
+    # retrieve error message(s) for given field
+    $results->error_message('foo');
 
 =head1 LICENSE
 
