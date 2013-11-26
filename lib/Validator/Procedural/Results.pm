@@ -24,11 +24,7 @@ Validator::Procedural::Results - Results for Validator::Procedural
 
 This is the results class of L<Validator::Procedural>.
 
-=head1 METHODS
-
-=over 4
-
-=back
+Available methods are described in L<Validator::Procedural/"METHODS OF Validator::Procedural::Results">.
 
 =head1 LICENSE
 

@@ -94,56 +94,57 @@ Validator::Procedural - Procedural validator
 
 
 
-    # can retrieve validation result anytime
+    # retrieve validation result
+    my $results = $validator->results;
 
-    $validator->success();      # => TRUE or FALSE
-    $validator->has_error();    # => ! success()
+    $results->success();      # => TRUE or FALSE
+    $results->has_error();    # => ! success()
 
     # retrieve fields and errors mapping
-    $validator->errors();       # return errors errors in Array or Hash-ref (for scalar context)
+    $results->errors();       # return errors errors in Array or Hash-ref (for scalar context)
     # => (
     #     foo => [ 'MISSING', 'INVALID_DATE' ],
     # )
 
-    $validator->invalid_fields();
+    $results->invalid_fields();
     # => ( 'foo', 'bar' )
 
     # can filter fields that has given error code
-    $validator->invalid_fields('MISSING');
+    $results->invalid_fields('MISSING');
     # => ( 'foo', 'bar' )
 
     # error code filtering rule can be supplied with subroutine
-    $validator->invalid_fields(sub { grep { $_ eq 'MISSING' } @_ });
+    $results->invalid_fields(sub { grep { $_ eq 'MISSING' } @_ });
     # => ( 'foo', 'bar' )
 
-    $validator->valid('foo');       # => TRUE of FALSE
-    $validator->invalid('foo');     # => ! valid()
+    $results->valid('foo');       # => TRUE of FALSE
+    $results->invalid('foo');     # => ! valid()
 
     # retrieve error codes (or empty for valid field)
-    $validator->error('foo');       # return errors for specified field in Array
+    $results->error('foo');       # return errors for specified field in Array
     # => ( 'MISSING', 'INVALID_DATE' )
 
     # clear all errors
-    $validator->clear_errors();
+    $results->clear_errors();
     # clear errors for specified fields
-    $validator->clear_errors('foo');
+    $results->clear_errors('foo');
 
     # append error (manually)
-    $validator->add_error('foo', 'MISSING');
+    $results->add_error('foo', 'MISSING');
 
     # retrieve filtered value for specified field
-    $validator->value('foo');
+    $results->value('foo');
     # retrieve all values filtered
-    $validator->values();   # return values in Array or Hash::MultiValue (for scalar context)
+    $results->values();   # return values in Array or Hash::MultiValue (for scalar context)
     # => (
     #     foo => [ 'val1', 'val2' ],
     #     var => [ 'val1' ],            # always in Array-ref for single value
     # )
 
     # retrieve error messages for all fields
-    $validator->error_messages();
+    $results->error_messages();
     # retrieve error message(s) for given field
-    $validator->error_message('foo');
+    $results->error_message('foo');
 
 # DESCRIPTION
 
@@ -240,17 +241,25 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
         # restrict registering methods
         $validator->register_procedure_class('::Text', 'address', 'telephone');
 
-    Register procedure methods from specified module.
+    Registers procedure methods from specified module.
     (Modules will be loaded automatically.)
 
-- formatter
+- register\_formatter
 
-        $validator->formatter( $formatter_instance );
+        $validator->register_formatter( $formatter_instance );
 
-    Register error message formatter object.
+    Registers error message formatter object.
     Requisites for message formatter class is described in ["REQUISITES FOR MESSAGE FORMATTER CLASS"](#REQUISITES FOR MESSAGE FORMATTER CLASS).
 
     If formatter is not specified, an instance of [Validator::Procedural::Formatter::Minimal](https://metacpan.org/pod/Validator::Procedural::Formatter::Minimal) will be used as formatter on the first generation of error messages.
+
+- results
+
+        my $results = $validor->results;
+
+    Retrieves results object (instance of `Validator::Procedural::Results`).
+
+    Available methods are described in ["METHODS OF Validator::Procedural::Results"](#METHODS OF Validator::Procedural::Results).
 
 - process
 
@@ -265,6 +274,8 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
         my $result = $validor->process('field_name', sub { ... }, $value1, $value2, ...);
 
     If you specify values after procedure for arguments, they will be used as initial values for procedure.
+
+# METHODS OF Validator::Procedural::Results
 
 - value
 
@@ -281,8 +292,8 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - values
 
-        my $values = $validator->values();  # => instance of Hash::MultiValue
-        my %values = $validator->values();
+        my $values = $results->values();  # => instance of Hash::MultiValue
+        my %values = $results->values();
 
     Gets all values for all fields.
 
@@ -305,9 +316,9 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - invalid\_fields
 
-        my @fields = $validator->invalid_fields();
-        my @fields = $validator->invalid_fields('ERROR_CODE1', 'ERROR_CODE2', ...);
-        my @fields = $validator->invalid_fields(sub { ... });
+        my @fields = $results->invalid_fields();
+        my @fields = $results->invalid_fields('ERROR_CODE1', 'ERROR_CODE2', ...);
+        my @fields = $results->invalid_fields(sub { ... });
 
     Returns names of invalid fields.
 
@@ -317,8 +328,8 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - errors
 
-        my %errors = $validator->errors();
-        my $errors = $validator->errors();
+        my %errors = $results->errors();
+        my $errors = $results->errors();
         # => +{
         #       field1 => [ 'ERROR_CODE1' ],
         #       field2 => [ 'ERROR_CODE1', 'ERROR_CODE2' ],
@@ -332,7 +343,7 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - error
 
-        my @errors = $validator->error('field_name');
+        my @errors = $results->error('field_name');
 
     Returns error codes for specified field.
 
@@ -346,7 +357,7 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - error\_messages
 
-        my @messages = $validator->error_messages();
+        my @messages = $results->error_messages();
 
     Gets error messages in array.
 
@@ -354,16 +365,16 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
 - error\_message
 
-        my @messages = $validator->error_message('field_name');
+        my @messages = $results->error_message('field_name');
 
     Gets error messages for specified field in array.
 
-    # INTERNAL API METHODS
+# INTERNAL API METHODS
 
-    Following methods are considered as somewhat of internal APIs.
-    But these are convenient when you want to set validation state from the outside of validation procedures (You already have faced such a situation I believe), so usage of these are not restricted.
+Following methods are considered as somewhat of internal APIs.
+But these are convenient when you want to set validation state from the outside of validation procedures (You already have faced such a situation I believe), so usage of these are not restricted.
 
-    For further information for what APIs do, please refer to ["METHODS" in Validator::Procedural::Field](https://metacpan.org/pod/Validator::Procedural::Field#METHODS).
+For further information for what APIs do, please refer to ["METHODS" in Validator::Procedural::Field](https://metacpan.org/pod/Validator::Procedural::Field#METHODS).
 
 - apply\_filter
 
@@ -373,17 +384,20 @@ This module is NOT all-in-one validation product.  This module DOES NOT provide 
 
         $validator->check('field_name', 'CHECKER');
         $validator->check('field_name', 'CHECKER', %options);
+
+# INTERNAL API METHODS OF Validator::Procedural::Results
+
 - add\_error
 
-        $validator->add_error('field_name', 'ERROR_CODE', 'ERROR_CODE', ...);
+        $results->add_error('field_name', 'ERROR_CODE', 'ERROR_CODE', ...);
 - clear\_errors
 
-        $validator->clear_errors('field_name');
-        $validator->clear_errors();             # clears all errors
+        $results->clear_errors('field_name');
+        $results->clear_errors();             # clears all errors
 - set\_errors
 
-        $validator->set_errors('field_name', 'ERROR_CODE', 'ERROR_CODE', ...);
-        $validator->set_errors('field_name');   # same as clear_errors('field_name');
+        $results->set_errors('field_name', 'ERROR_CODE', 'ERROR_CODE', ...);
+        $results->set_errors('field_name');   # same as clear_errors('field_name');
 
 # REQUISITES FOR FILTER METHODS
 
