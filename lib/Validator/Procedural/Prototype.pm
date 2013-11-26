@@ -22,14 +22,14 @@ Validator::Procedural::Prototype - Prototype for Validator::Procedural
         filters => {
             UCFIRST => sub { ucfirst },
         },
-        checkers => {
+        rules => {
             NUMERIC => sub { /^\d+$/ || 'INVALID' },
         },
     );
 
     $prot->register_filter('FOO', sub { ... });
 
-    $prot->register_checker_class('::Common');
+    $prot->register_rule_class('::Common');
 
     my $validator = $prot->create_validator();
 
@@ -49,7 +49,7 @@ In web applications for example, it is recommended to create validator prototype
         filters => {
             FOO => sub { ... },
         },
-        checkers => {
+        rules => {
             BAR => sub { ... },
         },
         procedures => {
@@ -59,25 +59,25 @@ In web applications for example, it is recommended to create validator prototype
 
 Creates prototype.
 
-Optionally filters / checkers / procedures can be specified.
+Optionally filters / rules / procedures can be specified.
 
 =item create_validator
 
 Generates L<Validator::Procedural> instance from the prototype.
 
-Registerd filter / checker / procedure methods and error message formatter in the prototype will be inherited by generated instances.
+Registerd filter / rule / procedure methods and error message formatter in the prototype will be inherited by generated instances.
 
 Doesn't consume any arguments.  (in current API)
 
 =item register_filter
 
-=item register_checker
+=item register_rule
 
 =item register_procedure
 
 =item register_filter_class
 
-=item register_checker_class
+=item register_rule_class
 
 =item register_procedure_class
 

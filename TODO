@@ -1,7 +1,7 @@
 # TODO
 
-- Make ctor acceptable filter / checker / procedure classes
-- Create Validator::Procedural::Filter::Common
-- Create Validator::Procedural::Checker::Common
+- Make ctor acceptable filter / rule / procedure classes
+- Create Validator::Procedural::Filter::General
+- Create Validator::Procedural::Rule::General
 - Make remove_field() acceptable filtering subroutine
 - Fix croak (level) in Validator::Procedural::Field

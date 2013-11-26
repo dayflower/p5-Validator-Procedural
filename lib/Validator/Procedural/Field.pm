@@ -29,7 +29,7 @@ Validator::Procedural::Field - Field for Validator::Procedural
         my $val = $field->value();
         $field->value($val . ' +0000');
 
-        # apply checkers
+        # apply rules
         return unless $field->check('EXISTS');
 
         # check value manually
@@ -77,9 +77,9 @@ Applies filter to field value.
 
 =item check
 
-    $field->check('TRIM');              # call registered checker
+    $field->check('TRIM');              # call registered rule
     $field->check(sub { ... });
-    $field->check('GT', than => 3);     # can supply options for checker
+    $field->check('GT', than => 3);     # can supply options for rule
 
 Checks field value.
 

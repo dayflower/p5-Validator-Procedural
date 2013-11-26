@@ -2,14 +2,14 @@ use strict;
 use Test::More;
 use Validator::Procedural;
 
-subtest "simple checker" => sub {
+subtest "simple rule" => sub {
     my $vldr = Validator::Procedural->new(
-        checkers => {
-            CHECKER => sub { $_ eq 'a' ? 'A' : 'Z' },
+        rules => {
+            RULE => sub { $_ eq 'a' ? 'A' : 'Z' },
         },
     );
 
-    my $proc = sub { $_[0]->check('CHECKER') };
+    my $proc = sub { $_[0]->check('RULE') };
 
     $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, undef);
@@ -32,17 +32,17 @@ subtest "simple checker" => sub {
     is_deeply [ $vldr->results->error('f') ], [ 'Z' ];
 };
 
-subtest "checker for multiple" => sub {
+subtest "rule for multiple" => sub {
     my $vldr = Validator::Procedural->new(
-        checkers => {
-            CHECKER => sub {
+        rules => {
+            RULE => sub {
                 my $opts = pop @_;
                 (grep { $_ eq 'a' } @_) ? 'A' : 'Z';
             },
         },
     );
 
-    my $proc = sub { $_[0]->check('CHECKER') };
+    my $proc = sub { $_[0]->check('RULE') };
 
     $vldr->results->clear_errors('f');
     $vldr->process('f', $proc, undef);
@@ -69,19 +69,19 @@ subtest "checker for multiple" => sub {
     is_deeply [ $vldr->results->error('f') ], [ 'Z' ];
 };
 
-subtest "checker with options" => sub {
+subtest "rule with options" => sub {
     my $vldr = Validator::Procedural->new(
-        checkers => {
-            CHECKER => sub {
+        rules => {
+            RULE => sub {
                 my $opts = pop @_;
                 0+$_ > 0+$opts->{c} ? '>' : '<=';
             },
         },
     );
 
-    my $proc1 = sub { $_[0]->check('CHECKER', c => 0) };
-    my $proc2 = sub { $_[0]->check('CHECKER', c => 10) };
-    my $proc3 = sub { $_[0]->check('CHECKER', c => 20) };
+    my $proc1 = sub { $_[0]->check('RULE', c => 0) };
+    my $proc2 = sub { $_[0]->check('RULE', c => 10) };
+    my $proc3 = sub { $_[0]->check('RULE', c => 20) };
 
     $vldr->results->clear_errors('f');
     $vldr->process('f', $proc1, undef);

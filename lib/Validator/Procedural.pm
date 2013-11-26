@@ -18,10 +18,10 @@ sub register_filter {
     return $self;
 }
 
-sub register_checker {
+sub register_rule {
     my ($self, @args) = @_;
-    while (my ($name, $checker) = splice @args, 0, 2) {
-        $self->{checkers}->{$name} = $checker;
+    while (my ($name, $rule) = splice @args, 0, 2) {
+        $self->{rules}->{$name} = $rule;
     }
     return $self;
 }
@@ -34,7 +34,7 @@ sub register_procedure {
     return $self;
 }
 
-foreach my $prop (qw( filter checker procedure )) {
+foreach my $prop (qw( filter rule procedure )) {
     my $prefix = ucfirst $prop;
     my $sub = sub {
         my ($self, $package) = splice @_, 0, 2;
@@ -70,7 +70,7 @@ sub new {
     my ($class, %args) = @_;
     my $self = bless {
         filters    => {},
-        checkers   => {},
+        rules      => {},
         procedures => {},
 
         %args,
@@ -89,7 +89,7 @@ sub create_validator {
 
     return Validator::Procedural->new(
         filters    => { %{$self->{filters}}    },
-        checkers   => { %{$self->{checkers}}   },
+        rules      => { %{$self->{rules}}      },
         procedures => { %{$self->{procedures}} },
         formatter  => $self->{formatter},
     );
@@ -109,7 +109,7 @@ sub new {
 
     my $self = bless {
         filters    => {},
-        checkers   => {},
+        rules      => {},
         procedures => {},
 
         %args,
@@ -197,15 +197,15 @@ sub apply_filter {
 }
 
 sub check {
-    my ($self, $field, $checker, %options) = @_;
+    my ($self, $field, $rule, %options) = @_;
 
     my @vals = $self->results->value($field);
 
-    my $meth = $checker;
+    my $meth = $rule;
     if (! ref $meth) {
-        $meth = $self->{checkers}->{$checker};
+        $meth = $self->{rules}->{$rule};
         unless ($meth) {
-            croak "Undefined checker '$checker'";
+            croak "Undefined rule '$rule'";
         }
     }
 
@@ -460,13 +460,13 @@ Validator::Procedural - Procedural validator
         filters => {
             UCFIRST => sub { ucfirst },
         },
-        checkers => {
+        rules => {
             NUMERIC => sub { /^\d+$/ || 'INVALID' },
         },
     );
 
     $prot->register_filter_class('::General');
-    $prot->register_checker_class('::General', 'EXISTS');
+    $prot->register_rule_class('::General', 'EXISTS');
 
     # now create validator from prototype
     my $validator = $prot->create_validator();
@@ -482,7 +482,7 @@ Validator::Procedural - Procedural validator
         $field->apply_filter('TRIM');
         $field->apply_filter('UCFIRST');
 
-        # apply checkers
+        # apply rules
         return unless $field->check('EXISTS');
     });
 
@@ -542,17 +542,17 @@ Registers filter methods.
 
 Requisites for filter methods are described in L<"REQUISITES FOR FILTER METHODS">.
 
-=item register_checker
+=item register_rule
 
-    $validator->register_checker(
+    $validator->register_rule(
         FOO => sub { ... },
         BAR => sub { ... },
         ...
     );
 
-Registers checker methods.
+Registers rule methods.
 
-Requisites for checker methods are described in L<"REQUISITES FOR CHECKER METHODS">.
+Requisites for rule methods are described in L<"REQUISITES FOR RULE METHODS">.
 
 =item register_procedure
 
@@ -579,17 +579,17 @@ Requisites for procedure methods are described in L<"REQUISITES FOR PROCEDURE ME
 Register filter methods from specified module.
 (Modules will be loaded automatically.)
 
-=item register_checker_class
+=item register_rule_class
 
-    # register checker methods of Validator::Procedural::Checker::Common
-    $validator->register_checker_class('::Common');
+    # register rule methods of Validator::Procedural::Rule::Common
+    $validator->register_rule_class('::Common');
 
-    $validator->register_checker_class('MY::Own::Checker::Class');
+    $validator->register_rule_class('MY::Own::Rule::Class');
 
     # restrict registering methods
-    $validator->register_checker_class('::Number', 'BIG', 'SMALL');
+    $validator->register_rule_class('::Number', 'BIG', 'SMALL');
 
-Register checker methods from specified module.
+Register rule methods from specified module.
 (Modules will be loaded automatically.)
 
 =item register_procedure_class
@@ -752,8 +752,8 @@ For further information for what APIs do, please refer to L<Validator::Procedura
 
 =item check
 
-    $validator->check('field_name', 'CHECKER');
-    $validator->check('field_name', 'CHECKER', %options);
+    $validator->check('field_name', 'RULE');
+    $validator->check('field_name', 'RULE', %options);
 
 =back
 
@@ -797,9 +797,9 @@ You can receive original value from method arguments, following options specifie
         },
     );
 
-=head1 REQUISITES FOR CHECKER METHODS
+=head1 REQUISITES FOR RULE METHODS
 
-    $validator->register_checker(
+    $validator->register_rule(
         EMAIL => sub {
             unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
                 return 'INVALID';   # error code for errors
@@ -813,7 +813,7 @@ Filter methods accept single value from C<$_> and should return error codes (yes
 
 If you want to check multiple values supplied, you can capture from method arguments, following options specified in C<check()> method.
 
-    $validator->register_checker(
+    $validator->register_rule(
         CONTAINS => sub {
             my $option = pop @_;
             my (@vals) = @_;
@@ -836,7 +836,7 @@ If you want to check multiple values supplied, you can capture from method argum
             # apply filters
             $field->apply_filter('TRIM');
 
-            # apply checkers
+            # apply rules
             return unless $field->check('EXISTS');
 
             # filter value by hand
@@ -897,36 +897,36 @@ Message formatter class must have C<format()> method, which accepts field name a
 
     use Validator::Procedural;
 
-    # create validator prototype with given filters / checkers.
+    # create validator prototype with given filters / rules.
     my $prot = Validator::Procedural::Prototype->new(
         filters => {
             UCFIRST => sub { ucfirst },
         },
-        checkers => {
+        rules => {
             NUMERIC => sub { /^\d+$/ || 'INVALID' },
         },
     );
 
     # filter plugins can be applied to validator (prototypes).
     Validator::Procedural::Filter::Common->register_to($prot, 'TRIM', 'LTRIM');
-    # also checker plugins can be
-    Validator::Procedural::Checker::Common->register_to($prot);
+    # also rule plugins can be
+    Validator::Procedural::Rule::Common->register_to($prot);
 
     # filter class registration can be called from validator (prototypes).
     # package begins with '::' is recognized under 'Validator::Procedural::Filter::' namespace.
     $prot->register_filter_class('::Japanese', 'HAN2ZEN');
     $prot->register_filter_class('MY::Own::Filter');
-    # also for checker class registration
-    # package begins with '::' is recognized under 'Validator::Procedural::Checker::' namespace.
-    $prot->register_checker_class('::Date');
-    $prot->register_checker_class('MY::Own::Checker', 'MYCHECKER');
+    # also for rule class registration
+    # package begins with '::' is recognized under 'Validator::Procedural::Rule::' namespace.
+    $prot->register_rule_class('::Date');
+    $prot->register_rule_class('MY::Own::Rule', 'MYRULE');
 
-    # you can register filters (and checkers) after instantiation of prototype
+    # you can register filters (and rules) after instantiation of prototype
     $prot->register_filter(
         TRIM => sub { s{ (?: \A \s+ | \s+ \z ) }{}gxmso; $_ },
     );
 
-    $prot->register_checker(
+    $prot->register_rule(
         EMAIL => sub {
             # Of course this is not precise for email address, but just example.
             unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
@@ -945,7 +945,7 @@ Message formatter class must have C<format()> method, which accepts field name a
             # apply filters
             $field->apply_filter('TRIM');
 
-            # apply checkers
+            # apply rules
             return unless $field->check('EXISTS');
         }
     );
@@ -966,7 +966,7 @@ Message formatter class must have C<format()> method, which accepts field name a
         # apply filters
         $field->apply_filter('TRIM');
 
-        # apply checkers
+        # apply rules
         return unless $field->check('EXISTS');
 
         # filter value by hand

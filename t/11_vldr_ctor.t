@@ -17,9 +17,9 @@ subtest "ctor" => sub {
             FILTER1 => sub { 'FILTER1' },
             FILTER2 => sub { 'FILTER2' },
         },
-        checkers => {
-            CHECKER1 => sub { return 'CHECKER1' },
-            CHECKER2 => sub { return 'CHECKER2' },
+        rules => {
+            RULE1 => sub { return 'RULE1' },
+            RULE2 => sub { return 'RULE2' },
         },
         procedures => {
             procedure1 => sub { $_[0]->add_error('procedure1') },
@@ -34,11 +34,11 @@ subtest "ctor" => sub {
     $vldr->process('f2', sub { $_[0]->apply_filter('FILTER2') }, "");
     is $vldr->results->value('f2'), 'FILTER2';
 
-    $vldr->process('f3', sub { $_[0]->check('CHECKER1') }, "");
-    is_deeply [ $vldr->results->error('f3') ], [ 'CHECKER1' ];
+    $vldr->process('f3', sub { $_[0]->check('RULE1') }, "");
+    is_deeply [ $vldr->results->error('f3') ], [ 'RULE1' ];
 
-    $vldr->process('f4', sub { $_[0]->check('CHECKER2') }, "");
-    is_deeply [ $vldr->results->error('f4') ], [ 'CHECKER2' ];
+    $vldr->process('f4', sub { $_[0]->check('RULE2') }, "");
+    is_deeply [ $vldr->results->error('f4') ], [ 'RULE2' ];
 
     $vldr->process('f5', 'procedure1', "");
     is_deeply [ $vldr->results->error('f5') ], [ 'procedure1' ];
@@ -48,11 +48,11 @@ subtest "ctor" => sub {
 
     is $vldr->results->formatter->format('f0', 'ERROR1'), 'formatter1';
 
-    # absent filter / checker / procedure
+    # absent filter / rule / procedure
 
     throws_ok { $vldr->process('f7', sub { $_[0]->apply_filter('FILTERx') }, "") } qr{Undefined \s+ filter}ixms, "raise undefined filter";
 
-    throws_ok { $vldr->process('f8', sub { $_[0]->check('CHECKERx') }, "") } qr {Undefined \s+ checker}ixms, "raise undefined checker";
+    throws_ok { $vldr->process('f8', sub { $_[0]->check('RULEx') }, "") } qr {Undefined \s+ rule}ixms, "raise undefined rule";
 
     throws_ok { $vldr->process('f9', 'procedurex', "") } qr{Undefined \s+ procedure}ixms, "raise undefined procedure";
 };
@@ -80,26 +80,26 @@ subtest "register_filter" => sub {
     is $vldr->results->value('f3'), 'c3';
 };
 
-subtest "register_checker" => sub {
+subtest "register_rule" => sub {
     my $vldr = Validator::Procedural->new(
-        checkers => {
-            CHECKER1 => sub { 'C1' },
-            CHECKER2 => sub { 'C2' },
+        rules => {
+            RULE1 => sub { 'C1' },
+            RULE2 => sub { 'C2' },
         },
     );
 
-    $vldr->register_checker(
-        CHECKER2 => sub { 'c2-1', 'c2-2' },
-        CHECKER3 => sub { 'c3' },
+    $vldr->register_rule(
+        RULE2 => sub { 'c2-1', 'c2-2' },
+        RULE3 => sub { 'c3' },
     );
 
-    $vldr->process('f1', sub { $_[0]->check('CHECKER1') }, "");
+    $vldr->process('f1', sub { $_[0]->check('RULE1') }, "");
     is_deeply [ $vldr->results->error('f1') ], [ 'C1' ];
 
-    $vldr->process('f2', sub { $_[0]->check('CHECKER2') }, "");
+    $vldr->process('f2', sub { $_[0]->check('RULE2') }, "");
     is_deeply [ $vldr->results->error('f2') ], [ 'c2-1', 'c2-2' ];
 
-    $vldr->process('f3', sub { $_[0]->check('CHECKER3') }, "");
+    $vldr->process('f3', sub { $_[0]->check('RULE3') }, "");
     is_deeply [ $vldr->results->error('f3') ], [ 'c3' ];
 };
 

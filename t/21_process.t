@@ -87,7 +87,7 @@ subtest "apply_filter" => sub {
 
 subtest "check" => sub {
     my $prot = Validator::Procedural::Prototype->new(
-        checkers => {
+        rules => {
             OK1 => sub { return },
             OK2 => sub { return },
             OK3 => sub { return },
@@ -106,9 +106,9 @@ subtest "check" => sub {
     is_deeply [ $vtor->results->error('all') ], [qw( NG1 NG2 NG3 )];
 };
 
-subtest "checker logic" => sub {
+subtest "rules logic" => sub {
     my $prot = Validator::Procedural::Prototype->new(
-        checkers => {
+        rules => {
             UC  => sub { /[A-Z]/ && 'UC'  },
             LC  => sub { /[a-z]/ && 'LC'  },
             NUM => sub { /[0-9]/ && 'NUM' },
