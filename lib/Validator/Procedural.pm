@@ -516,7 +516,7 @@ So I focused on following points for design this module.
 
 =item To provide compact but sufficient container for validation results
 
-=item To provide filtering mechanism and functionality to retrieve filtered parameters
+=item To provide filtering mechanism and functionality to retrieve filtered values from results
 
 =item To depend on other modules as least as possible (complex validators and filters depending on other modules heavyly should be supplied as dependent plugin distributions)
 
@@ -907,18 +907,18 @@ Message formatter class must have C<format()> method, which accepts field name a
         },
     );
 
-    # filter plugins can be applied to validator (prototypes).
+    # filter plugins can be applied to validators (and to prototypes).
     Validator::Procedural::Filter::Common->register_to($prot, 'TRIM', 'LTRIM');
     # also rule plugins can be
     Validator::Procedural::Rule::Common->register_to($prot);
 
-    # filter class registration can be called from validator (prototypes).
-    # package begins with '::' is recognized under 'Validator::Procedural::Filter::' namespace.
-    $prot->register_filter_class('::Japanese', 'HAN2ZEN');
-    $prot->register_filter_class('MY::Own::Filter');
+    # filter class registration can be called from validators (and to prototypes).
+    # package begins with '::' is recognized as belonging to 'Validator::Procedural::Filter::' namespace.
+    $prot->register_filter_class('::Japanese', 'HAN2ZEN', 'ZEN2HAN');
+    $prot->register_filter_class('MY::Own::Filter');    # import all filter
     # also for rule class registration
-    # package begins with '::' is recognized under 'Validator::Procedural::Rule::' namespace.
-    $prot->register_rule_class('::Date');
+    # package begins with '::' is recognized as belonging to 'Validator::Procedural::Rule::' namespace.
+    $prot->register_rule_class('::Date');               # import all checker
     $prot->register_rule_class('MY::Own::Rule', 'MYRULE');
 
     # you can register filters (and rules) after instantiation of prototype
@@ -928,16 +928,16 @@ Message formatter class must have C<format()> method, which accepts field name a
 
     $prot->register_rule(
         EMAIL => sub {
-            # Of course this is not precise for email address, but just example.
+            # Of course not precise for email address, but just example.
             unless (m{\A \w+ @ \w+ (?: \. \w+ )+ \z}xmso) {
-                return 'INVALID';   # error code for errors
+                return 'INVALID';   # error codes for errors
             }
 
             return;                 # (undef) for OK
         },
     );
 
-    # can register common filtering and checking procedure (not required)
+    # can register common filtering and checking procedure (but not required)
     $prot->register_procedure(
         name => sub {
             my ($field) = @_;
@@ -956,7 +956,12 @@ Message formatter class must have C<format()> method, which accepts field name a
     # now create validator (with state) from prototype
     my $validator = $prot->create_validator();
 
-    # process for field 'bar' by custom procedure
+    # you can register filters (and checkers) into validators
+    $validator->register_filter(
+        LTRIM => sub { s{ \A \s+ }{}xmso; $_ },
+    );
+
+    # process validation for field 'bar' by custom procedure
     $validator->process('bar', sub {
         my ($field) = @_;
 
@@ -981,7 +986,7 @@ Message formatter class must have C<format()> method, which accepts field name a
     });
 
     # can apply registered procedure with given value
-    $validator->process('foo', 'DATETIME', $req->param('foo'));
+    $validator->process('foo', 'name', $req->param('foo'));
 
 
     # retrieve validation result
