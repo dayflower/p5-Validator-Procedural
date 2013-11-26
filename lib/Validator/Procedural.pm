@@ -105,38 +105,40 @@ our @ISA = qw( Validator::Procedural::_RegistryMixin );
 
 sub new {
     my ($class, %args) = @_;
+    my $formatter = delete $args{formatter};
+
     my $self = bless {
         filters    => {},
         checkers   => {},
         procedures => {},
 
-        value        => {},
-        value_fields => [],
-        error        => {},
-        error_fields => [],
-
         %args,
     }, $class;
+
+    $self->{results} = Validator::Procedural::Results->new();
+
+    if (defined $formatter) {
+        $self->register_formatter($formatter);
+    }
+
     return $self;
 }
 
+sub results { $_[0]->{results} }
+
 sub formatter {
     my $self = shift;
+
     if (@_) {
         $self->register_formatter(@_);
     }
 
-    unless ($self->{formatter}) {
-        require Validator::Procedural::Formatter::Minimal;
-        $self->{formatter} = Validator::Procedural::Formatter::Minimal->new();
-    }
-
-    return $self->{formatter};
+    return $self->results->formatter;
 }
 
 sub register_formatter {
     my ($self, $formatter) = @_;
-    $self->{formatter} = $formatter;
+    $self->results->formatter($formatter);
     return $self;
 }
 
@@ -144,7 +146,7 @@ sub process {
     my ($self, $field, $procedure, @vals) = @_;
 
     if (@vals) {
-        $self->value($field, @vals);
+        $self->results->value($field, @vals);
     }
 
     if (! ref $procedure) {
@@ -167,11 +169,83 @@ sub remove_field {
     my ($self, @field_names) = @_;
 
     foreach my $field_name (@field_names) {
-        $self->value($field_name, undef);
-        $self->clear_errors($field_name);
+        $self->results->value($field_name, undef);
+        $self->results->clear_errors($field_name);
     }
 
     return $self;
+}
+
+sub apply_filter {
+    my ($self, $field, $filter, %options) = @_;
+
+    my @vals = $self->results->value($field);
+
+    my $meth = $filter;
+    if (! ref $meth) {
+        $meth = $self->{filters}->{$filter};
+        unless ($meth) {
+            croak "Undefined filter: '$filter'";
+        }
+    }
+
+    @vals = map { &$meth($_, \%options) } @vals;
+
+    $self->results->value($field, @vals);
+
+    return @vals;
+}
+
+sub check {
+    my ($self, $field, $checker, %options) = @_;
+
+    my @vals = $self->results->value($field);
+
+    my $meth = $checker;
+    if (! ref $meth) {
+        $meth = $self->{checkers}->{$checker};
+        unless ($meth) {
+            croak "Undefined checker '$checker'";
+        }
+    }
+
+    my @error_codes = do {
+        local $_ = $vals[0];
+        grep { defined $_ && $_ ne "" } &$meth(@vals, \%options);
+    };
+    if (@error_codes) {
+        $self->results->add_error($field, @error_codes);
+    }
+
+    return @error_codes == 0;
+}
+
+package Validator::Procedural::Results;
+
+sub new {
+    my ($class) = @_;
+    my $self = bless {
+        value        => {},
+        value_fields => [],
+        error        => {},
+        error_fields => [],
+    }, $class;
+    return $self;
+}
+
+sub formatter {
+    my $self = shift;
+
+    if (@_) {
+        $self->{formatter} = shift;
+    }
+
+    unless ($self->{formatter}) {
+        require Validator::Procedural::Formatter::Minimal;
+        $self->{formatter} = Validator::Procedural::Formatter::Minimal->new();
+    }
+
+    return $self->{formatter};
 }
 
 sub value {
@@ -203,50 +277,6 @@ sub values {
 
     my @values = map { $_ => $self->{value}->{$_} } @{$self->{value_fields}};
     return wantarray ? @values : Hash::MultiValue->from_mixed(@values);
-}
-
-sub apply_filter {
-    my ($self, $field, $filter, %options) = @_;
-
-    my @vals = $self->value($field);
-
-    my $meth = $filter;
-    if (! ref $meth) {
-        $meth = $self->{filters}->{$filter};
-        unless ($meth) {
-            croak "Undefined filter: '$filter'";
-        }
-    }
-
-    @vals = map { &$meth($_, \%options) } @vals;
-
-    $self->value($field, @vals);
-
-    return @vals;
-}
-
-sub check {
-    my ($self, $field, $checker, %options) = @_;
-
-    my @vals = $self->value($field);
-
-    my $meth = $checker;
-    if (! ref $meth) {
-        $meth = $self->{checkers}->{$checker};
-        unless ($meth) {
-            croak "Undefined checker '$checker'";
-        }
-    }
-
-    my @error_codes = do {
-        local $_ = $vals[0];
-        grep { defined $_ && $_ ne "" } &$meth(@vals, \%options);
-    };
-    if (@error_codes) {
-        $self->add_error($field, @error_codes);
-    }
-
-    return @error_codes == 0;
 }
 
 sub success {
@@ -287,6 +317,18 @@ sub _gen_invalid_matcher {
     return sub { first { $_ eq $error_code } @_ };
 }
 
+sub valid {
+    my ($self, $field) = @_;
+
+    return ! $self->invalid($field);
+}
+
+sub invalid {
+    my ($self, $field) = @_;
+
+    return exists $self->{error}->{$field};
+}
+
 sub errors {
     my ($self) = @_;
 
@@ -304,25 +346,12 @@ sub error {
     return @errors;
 }
 
-sub valid {
-    my ($self, $field) = @_;
-
-    return ! $self->invalid($field);
-}
-
-sub invalid {
-    my ($self, $field) = @_;
-
-    return exists $self->{error}->{$field};
-}
-
 sub clear_errors {
     my ($self, $field) = @_;
 
     if (defined $field) {
         delete $self->{error}->{$field};
-        @{$self->{error_fields}} = grep { $_ ne $field }
-                                        @{$self->{error_fields}};
+        @{$self->{error_fields}} = grep { $_ ne $field } @{$self->{error_fields}};
     }
     else {
         $self->{error} = {};
@@ -389,11 +418,22 @@ sub new {
 
 sub label { $_[0]->{label} }
 
-foreach my $method (qw( value apply_filter check
-                     error clear_errors set_errors add_error )) {
+foreach my $method (qw( apply_filter check )) {
     my $sub = sub {
         my $self = shift;
         return $self->{validator}->$method($self->{label}, @_);
+    };
+
+    my $func = sprintf '%s::%s', __PACKAGE__, $method;
+
+    no strict 'refs';
+    *{$func} = $sub;
+}
+
+foreach my $method (qw( value error clear_errors set_errors add_error )) {
+    my $sub = sub {
+        my $self = shift;
+        return $self->{validator}->results->$method($self->{label}, @_);
     };
 
     my $func = sprintf '%s::%s', __PACKAGE__, $method;

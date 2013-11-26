@@ -25,7 +25,7 @@ subtest "single value" => sub {
         $field->value(1);
     });
 
-    is $vtor->value('foo'), 1;
+    is $vtor->results->value('foo'), 1;
 };
 
 subtest "multiple values" => sub {
@@ -37,8 +37,8 @@ subtest "multiple values" => sub {
         $field->value(1, 1, 2, 3, 5);
     });
 
-    is $vtor->value('foo'), 1;
-    is_deeply [ $vtor->value('foo') ], [ 1, 1, 2, 3, 5 ];
+    is $vtor->results->value('foo'), 1;
+    is_deeply [ $vtor->results->value('foo') ], [ 1, 1, 2, 3, 5 ];
 };
 
 subtest "value via process" => sub {
@@ -49,8 +49,8 @@ subtest "value via process" => sub {
         my ($field) = @_;
     }, 1, 1, 2, 3, 5);
 
-    is $vtor->value('foo'), 1;
-    is_deeply [ $vtor->value('foo') ], [ 1, 1, 2, 3, 5 ];
+    is $vtor->results->value('foo'), 1;
+    is_deeply [ $vtor->results->value('foo') ], [ 1, 1, 2, 3, 5 ];
 };
 
 subtest "add_error" => sub {
@@ -63,7 +63,7 @@ subtest "add_error" => sub {
         $field->add_error('BAZ');
     });
 
-    is_deeply [ $vtor->error('foo') ], [ 'BAR', 'BAZ' ];
+    is_deeply [ $vtor->results->error('foo') ], [ 'BAR', 'BAZ' ];
 };
 
 subtest "apply_filter" => sub {
@@ -82,7 +82,7 @@ subtest "apply_filter" => sub {
         $field->apply_filter('UCFIRST');
     }, ' HELLO WORLD ');
 
-    is scalar $vtor->value('foo'), 'Hello world';
+    is scalar $vtor->results->value('foo'), 'Hello world';
 };
 
 subtest "check" => sub {
@@ -103,7 +103,7 @@ subtest "check" => sub {
         $field->check($_) for qw( OK1 NG1 OK2 NG2 OK3 NG3 );
     });
 
-    is_deeply [ $vtor->error('all') ], [qw( NG1 NG2 NG3 )];
+    is_deeply [ $vtor->results->error('all') ], [qw( NG1 NG2 NG3 )];
 };
 
 subtest "checker logic" => sub {
@@ -123,17 +123,17 @@ subtest "checker logic" => sub {
     );
     my $vtor = $prot->create_validator();
 
-    $vtor->clear_errors('val');
+    $vtor->results->clear_errors('val');
     $vtor->process('val', 'ALL', ' abc ');
-    is_deeply [ $vtor->error('val') ], [qw( LC SP )];
+    is_deeply [ $vtor->results->error('val') ], [qw( LC SP )];
 
-    $vtor->clear_errors('val');
+    $vtor->results->clear_errors('val');
     $vtor->process('val', 'ALL', 'Abc');
-    is_deeply [ $vtor->error('val') ], [qw( UC LC )];
+    is_deeply [ $vtor->results->error('val') ], [qw( UC LC )];
 
-    $vtor->clear_errors('val');
+    $vtor->results->clear_errors('val');
     $vtor->process('val', 'ALL', '123 456');
-    is_deeply [ $vtor->error('val') ], [qw( NUM SP )];
+    is_deeply [ $vtor->results->error('val') ], [qw( NUM SP )];
 };
 
 subtest "error_messages" => sub {
@@ -165,7 +165,7 @@ subtest "error_messages" => sub {
     $vtor->process('ghi', 'BAZ');
     $vtor->process('HOGE', 'FOO');
 
-    is_deeply [ $vtor->error_messages() ], [ 'ABC foo', 'bar DEF', 'baz', 'Hoge foo' ];
+    is_deeply [ $vtor->results->error_messages() ], [ 'ABC foo', 'bar DEF', 'baz', 'Hoge foo' ];
 };
 
 done_testing;

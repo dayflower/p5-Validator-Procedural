@@ -12,17 +12,17 @@ subtest "simple filter" => sub {
     my $proc = sub { $_[0]->apply_filter('FILTER') };
 
     $vldr->process('f', $proc, undef);
-    is scalar $vldr->value('f'), undef;
+    is scalar $vldr->results->value('f'), undef;
 
     $vldr->process('f', $proc, "");
-    is scalar $vldr->value('f'), 'F:';
+    is scalar $vldr->results->value('f'), 'F:';
 
     $vldr->process('f', $proc, "X");
-    is scalar $vldr->value('f'), 'F:X';
+    is scalar $vldr->results->value('f'), 'F:X';
 
     $vldr->process('f', $proc, qw( a b c ));
-    is scalar $vldr->value('f'), 'F:a';
-    is_deeply [ $vldr->value('f') ], [qw( F:a F:b F:c )];
+    is scalar $vldr->results->value('f'), 'F:a';
+    is_deeply [ $vldr->results->value('f') ], [qw( F:a F:b F:c )];
 };
 
 subtest "filter with options" => sub {
@@ -40,34 +40,34 @@ subtest "filter with options" => sub {
     };
 
     $vldr->process('f', $proc1, undef);
-    is scalar $vldr->value('f'), undef;
+    is scalar $vldr->results->value('f'), undef;
 
     $vldr->process('f', $proc1, "");
-    is scalar $vldr->value('f'), 'abc::xyz';
+    is scalar $vldr->results->value('f'), 'abc::xyz';
 
     $vldr->process('f', $proc1, "X");
-    is scalar $vldr->value('f'), 'abc:X:xyz';
+    is scalar $vldr->results->value('f'), 'abc:X:xyz';
 
     $vldr->process('f', $proc1, qw( a b c ));
-    is scalar $vldr->value('f'), 'abc:a:xyz';
-    is_deeply [ $vldr->value('f') ], [qw( abc:a:xyz abc:b:xyz abc:c:xyz )];
+    is scalar $vldr->results->value('f'), 'abc:a:xyz';
+    is_deeply [ $vldr->results->value('f') ], [qw( abc:a:xyz abc:b:xyz abc:c:xyz )];
 
     my $proc2 = sub {
         $_[0]->apply_filter('FILTER', prefix => 'ABC', suffix => 'XYZ');
     };
 
     $vldr->process('f', $proc2, undef);
-    is scalar $vldr->value('f'), undef;
+    is scalar $vldr->results->value('f'), undef;
 
     $vldr->process('f', $proc2, "");
-    is scalar $vldr->value('f'), 'ABC::XYZ';
+    is scalar $vldr->results->value('f'), 'ABC::XYZ';
 
     $vldr->process('f', $proc2, "X");
-    is scalar $vldr->value('f'), 'ABC:X:XYZ';
+    is scalar $vldr->results->value('f'), 'ABC:X:XYZ';
 
     $vldr->process('f', $proc2, qw( a b c ));
-    is scalar $vldr->value('f'), 'ABC:a:XYZ';
-    is_deeply [ $vldr->value('f') ], [qw( ABC:a:XYZ ABC:b:XYZ ABC:c:XYZ )];
+    is scalar $vldr->results->value('f'), 'ABC:a:XYZ';
+    is_deeply [ $vldr->results->value('f') ], [qw( ABC:a:XYZ ABC:b:XYZ ABC:c:XYZ )];
 };
 
 done_testing;
